@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0c1218" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="description" content="NetForge — offline multi-vendor network engineering study tool" />
+<title>NetForge — Offline Network Engineering Study Tool</title>
+<style>
+:root {
+  --bg0: #0c1218;
+  --bg1: #121b24;
+  --bg2: #182430;
+  --bg3: #1e2e3c;
+  --line: rgba(120, 160, 180, 0.18);
+  --text: #e6eef4;
+  --muted: #8aa0b2;
+  --copper: #d4894a;
+  --copper2: #f0b27a;
+  --teal: #3db8a0;
+  --teal2: #7ee0cb;
+  --danger: #e85d5d;
+  --caution: #e0b34d;
+  --safe: #4ecf8a;
+  --font: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", sans-serif;
+  --mono: "IBM Plex Mono", "SF Mono", "Consolas", monospace;
+  --radius: 10px;
+  --nav-h: 64px;
+  --bottom-h: 64px;
+  --shadow: 0 12px 40px rgba(0,0,0,.35);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--font);
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(212,137,74,.14), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, rgba(61,184,160,.10), transparent 50%),
+    linear-gradient(180deg, var(--bg0), #0a1015 40%, var(--bg0));
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: calc(var(--bottom-h) + env(safe-area-inset-bottom));
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(125,170,190,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125,170,190,.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+#app { position: relative; z-index: 1; min-height: 100dvh; }
+a { color: var(--teal2); text-decoration: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: .75rem;
+  padding: .75rem 1rem;
+  padding-top: calc(.75rem + env(safe-area-inset-top));
+  background: rgba(12,18,24,.86);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  display: flex; align-items: center; gap: .6rem; min-width: max-content;
+  border: 0; background: transparent; padding: 0;
+}
+.brand-mark {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: linear-gradient(145deg, var(--copper), #9a5a28);
+  display: grid; place-items: center;
+  box-shadow: 0 0 0 1px rgba(240,178,122,.25), 0 8px 20px rgba(212,137,74,.25);
+  animation: pulseGlow 3.2s ease-in-out infinite;
+}
+.brand-mark svg { width: 18px; height: 18px; }
+.brand-text { text-align: left; line-height: 1.05; }
+.brand-text strong { display: block; font-size: 1.05rem; letter-spacing: .02em; }
+.brand-text span { font-size: .72rem; color: var(--muted); }
+.search-wrap { flex: 1; position: relative; max-width: 640px; }
+.search-wrap input {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg2);
+  border-radius: 999px;
+  padding: .7rem 1rem .7rem 2.4rem;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.search-wrap input:focus {
+  border-color: rgba(61,184,160,.55);
+  box-shadow: 0 0 0 3px rgba(61,184,160,.15);
+}
+.search-wrap .ico {
+  position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
+  color: var(--muted); pointer-events: none;
+}
+.desktop-nav { display: none; gap: .35rem; margin-left: auto; }
+.desktop-nav button {
+  border: 1px solid transparent; background: transparent; color: var(--muted);
+  padding: .45rem .7rem; border-radius: 8px; font-size: .85rem;
+}
+.desktop-nav button.active, .desktop-nav button:hover {
+  color: var(--text); background: var(--bg3); border-color: var(--line);
+}
+.bottom-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: .15rem;
+  padding: .35rem .35rem calc(.35rem + env(safe-area-inset-bottom));
+  background: rgba(12,18,24,.94);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+.bottom-nav button {
+  border: 0; background: transparent; color: var(--muted);
+  padding: .35rem .2rem; border-radius: 10px; font-size: .68rem;
+  display: flex; flex-direction: column; align-items: center; gap: .15rem;
+}
+.bottom-nav button.active { color: var(--copper2); background: rgba(212,137,74,.12); }
+.bottom-nav svg { width: 18px; height: 18px; }
+.view { display: none; padding: 1rem; max-width: 1100px; margin: 0 auto; animation: fadeUp .35s ease; }
+.view.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pulseGlow {
+  0%,100% { box-shadow: 0 0 0 1px rgba(240,178,122,.25), 0 8px 20px rgba(212,137,74,.2); }
+  50% { box-shadow: 0 0 0 1px rgba(240,178,122,.4), 0 8px 28px rgba(212,137,74,.4); }
+}
+@keyframes blink { 50% { opacity: 0; } }
+.cursor-blink { animation: blink 1.1s step-end infinite; }
+.hero {
+  padding: 1.25rem 0 1.5rem;
+  display: grid; gap: 1rem;
+}
+.hero h1 {
+  margin: 0; font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.05;
+  letter-spacing: -.02em;
+  background: linear-gradient(90deg, var(--text), var(--copper2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero p { margin: 0; color: var(--muted); max-width: 36rem; font-size: 1.02rem; }
+.vendor-strip { display: flex; flex-wrap: wrap; gap: .45rem; }
+.chip, .tag {
+  display: inline-flex; align-items: center; gap: .35rem;
+  border: 1px solid var(--line); background: rgba(24,36,48,.8);
+  color: var(--text); border-radius: 999px; padding: .35rem .7rem; font-size: .8rem;
+}
+.chip.active, .chip:hover { border-color: rgba(212,137,74,.5); color: var(--copper2); }
+.chip[data-v="cisco"].active { border-color: rgba(61,184,160,.5); color: var(--teal2); }
+.grid { display: grid; gap: .85rem; }
+.grid.cards { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.card-btn, .panel {
+  border: 1px solid var(--line); background: linear-gradient(180deg, rgba(30,46,60,.9), rgba(18,27,36,.92));
+  border-radius: var(--radius); padding: 1rem; text-align: left;
+  box-shadow: var(--shadow);
+  transition: transform .2s ease, border-color .2s;
+}
+.card-btn:hover { transform: translateY(-2px); border-color: rgba(212,137,74,.4); }
+.card-btn h3, .panel h3 { margin: 0 0 .35rem; font-size: 1rem; }
+.card-btn p, .muted { color: var(--muted); margin: 0; font-size: .9rem; }
+.section-title {
+  display: flex; align-items: end; justify-content: space-between; gap: 1rem;
+  margin: 1.25rem 0 .75rem;
+}
+.section-title h2 { margin: 0; font-size: 1.15rem; }
+.toolbar { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .85rem; align-items: center; }
+.btn {
+  border: 1px solid var(--line); background: var(--bg3); color: var(--text);
+  border-radius: 8px; padding: .55rem .85rem; font-size: .88rem;
+}
+.btn:hover { border-color: rgba(61,184,160,.45); }
+.btn.primary {
+  background: linear-gradient(135deg, var(--copper), #a8642f);
+  border-color: transparent; color: #1a1008; font-weight: 600;
+}
+.btn.ghost { background: transparent; }
+.btn.small { padding: .35rem .6rem; font-size: .78rem; }
+.list { display: grid; gap: .55rem; }
+.list-item {
+  display: grid; gap: .25rem;
+  border: 1px solid var(--line); background: rgba(18,27,36,.85);
+  border-radius: 10px; padding: .85rem .95rem; text-align: left; width: 100%;
+  animation: fadeUp .3s ease;
+}
+.list-item:hover { border-color: rgba(61,184,160,.4); }
+.list-item .row { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.cmd-name { font-family: var(--mono); font-size: .95rem; color: var(--teal2); }
+.badge {
+  font-size: .68rem; text-transform: uppercase; letter-spacing: .04em;
+  padding: .15rem .45rem; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+}
+.badge.cisco { color: #7ec8ff; border-color: rgba(126,200,255,.3); }
+.badge.juniper { color: #86e0a8; border-color: rgba(134,224,168,.3); }
+.badge.paloalto { color: #f0a070; border-color: rgba(240,160,112,.3); }
+.badge.linux { color: #f0d56a; border-color: rgba(240,213,106,.3); }
+.badge.powershell { color: #9bb7ff; border-color: rgba(155,183,255,.3); }
+.badge.safe { color: var(--safe); }
+.badge.caution { color: var(--caution); }
+.badge.danger { color: var(--danger); }
+.detail { display: grid; gap: 1rem; }
+.detail .syntax, pre, code, .term-out {
+  font-family: var(--mono); font-size: .84rem;
+}
+.detail .syntax, pre, .term-out {
+  background: #070b10; border: 1px solid var(--line); border-radius: 10px;
+  padding: .9rem 1rem; overflow: auto; white-space: pre-wrap; word-break: break-word;
+}
+.token-list { display: grid; gap: .45rem; }
+.token {
+  display: grid; grid-template-columns: minmax(90px, auto) 1fr; gap: .6rem;
+  padding: .55rem .7rem; border-radius: 8px; background: var(--bg2); border: 1px solid var(--line);
+}
+.token code { color: var(--copper2); }
+.kv { display: grid; gap: .65rem; }
+.kv .k { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+.compare-grid {
+  display: grid; gap: .75rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.compare-card {
+  border: 1px solid var(--line); border-radius: 10px; padding: .85rem; background: var(--bg2);
+}
+.compare-card h4 { margin: 0 0 .5rem; font-size: .85rem; color: var(--muted); text-transform: uppercase; }
+.compare-card code { color: var(--teal2); font-size: .82rem; display: block; margin-bottom: .35rem; }
+.terminal {
+  background: #070b10; border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.terminal-bar {
+  display: flex; gap: .5rem; align-items: center; justify-content: space-between;
+  padding: .55rem .8rem; background: var(--bg2); border-bottom: 1px solid var(--line);
+}
+.terminal-body {
+  min-height: 280px; max-height: 52vh; overflow: auto; padding: .85rem;
+  font-family: var(--mono); font-size: .84rem; line-height: 1.45;
+}
+.terminal-input-row {
+  display: flex; gap: .4rem; align-items: center; padding: .65rem .8rem;
+  border-top: 1px solid var(--line); background: #0a1016;
+}
+.terminal-input-row .prompt { color: var(--copper2); white-space: nowrap; font-family: var(--mono); font-size: .84rem; }
+.terminal-input-row input {
+  flex: 1; border: 0; outline: none; background: transparent; font-family: var(--mono); font-size: .84rem;
+}
+.line-in { color: var(--text); }
+.line-out { color: #b7c7d4; margin: .25rem 0 .7rem; white-space: pre-wrap; }
+.line-err { color: var(--caution); }
+.lab-block { display: grid; gap: .75rem; }
+.lab-line {
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg2);
+}
+.lab-line summary {
+  list-style: none; cursor: pointer; padding: .7rem .85rem; display: flex; justify-content: space-between; gap: .5rem;
+  font-family: var(--mono); font-size: .82rem; color: var(--teal2);
+}
+.lab-line summary::-webkit-details-marker { display: none; }
+.lab-line .explain { padding: 0 .85rem .85rem; color: var(--muted); font-size: .9rem; }
+.flash-card {
+  min-height: 180px; display: grid; place-items: center; text-align: center; padding: 1.25rem;
+  border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(160deg, var(--bg3), var(--bg1));
+  cursor: pointer; user-select: none;
+}
+.flash-card .front { font-family: var(--mono); font-size: 1.15rem; color: var(--teal2); }
+.flash-card .back { color: var(--text); font-size: 1rem; }
+.progress {
+  height: 8px; border-radius: 999px; background: var(--bg3); overflow: hidden; border: 1px solid var(--line);
+}
+.progress > span { display: block; height: 100%; background: linear-gradient(90deg, var(--copper), var(--teal)); width: 0; transition: width .35s ease; }
+.quiz-opt {
+  display: block; width: 100%; text-align: left; margin: .4rem 0; padding: .75rem .9rem;
+  border-radius: 10px; border: 1px solid var(--line); background: var(--bg2);
+}
+.quiz-opt.correct { border-color: var(--safe); background: rgba(78,207,138,.1); }
+.quiz-opt.wrong { border-color: var(--danger); background: rgba(232,93,93,.1); }
+.journal {
+  width: 100%; min-height: 90px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--bg2); padding: .75rem; resize: vertical;
+}
+.empty { color: var(--muted); padding: 1.5rem .5rem; text-align: center; }
+.hidden { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+@media (min-width: 900px) {
+  .bottom-nav { display: none; }
+  .desktop-nav { display: flex; }
+  body { padding-bottom: 0; }
+  .view { padding: 1.25rem 1.5rem 2rem; }
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <button class="brand" data-nav="home" aria-label="NetForge home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1a1008" stroke-width="2"><path d="M4 12h4l2-6 4 12 2-6h4"/></svg>
+      </span>
+      <span class="brand-text"><strong>NetForge</strong><span>offline study forge</span></span>
+    </button>
+    <div class="search-wrap">
+      <span class="ico" aria-hidden="true">⌕</span>
+      <label class="sr-only" for="global-search">Search commands</label>
+      <input id="global-search" type="search" placeholder="Search commands, tags, vendors…" inputmode="search" enterkeyhint="search" />
+    </div>
+    <nav class="desktop-nav" aria-label="Primary">
+      <button data-nav="home">Home</button>
+      <button data-nav="encyclopedia">Encyclopedia</button>
+      <button data-nav="compare">Compare</button>
+      <button data-nav="sandbox">Sandbox</button>
+      <button data-nav="labs">Labs</button>
+      <button data-nav="drills">Drills</button>
+      <button data-nav="planner">Planner</button>
+      <button data-nav="toolkit">Toolkit</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="view active" id="view-home" data-view="home"></section>
+    <section class="view" id="view-encyclopedia" data-view="encyclopedia"></section>
+    <section class="view" id="view-compare" data-view="compare"></section>
+    <section class="view" id="view-sandbox" data-view="sandbox"></section>
+    <section class="view" id="view-labs" data-view="labs"></section>
+    <section class="view" id="view-drills" data-view="drills"></section>
+    <section class="view" id="view-planner" data-view="planner"></section>
+    <section class="view" id="view-toolkit" data-view="toolkit"></section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Mobile">
+    <button data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5z"/></svg><span>Home</span></button>
+    <button data-nav="encyclopedia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3V4z"/><path d="M5 4a3 3 0 0 1 3-3h11"/></svg><span>Cmds</span></button>
+    <button data-nav="sandbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M12 15h5"/></svg><span>CLI</span></button>
+    <button data-nav="labs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6M10 3v6l-5.5 9.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 9V3"/></svg><span>Labs</span></button>
+    <button data-nav="drills"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 2.5 5.5L21 10l-4.5 3.5L18 20l-6-3.5L6 20l1.5-6.5L3 10l6.5-1.5L12 3z"/></svg><span>Drills</span></button>
+  </nav>
+</div>
+
+<script>
+window.NETFORGE_COMMANDS = [{"id": "cisco-sh-ip-int-br", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show ip interface brief", "aliases": ["sh ip int br", "shiib"], "purpose": "Lists every Layer-3 interface with IP address, OK status, method, and protocol status \u2014 the fastest health check after login.", "tokens": [{"t": "show", "d": "Display operational information"}, {"t": "ip", "d": "IP (Layer 3) related"}, {"t": "interface", "d": "Per-interface view"}, {"t": "brief", "d": "Compact one-line summary"}], "syntax": "show ip interface brief", "flags": [], "sample": "Interface              IP-Address      OK? Method Status                Protocol\nGigabitEthernet0/0     10.1.1.1        YES NVRAM  up                    up\nGigabitEthernet0/1     unassigned      YES NVRAM  administratively down down\nLoopback0              1.1.1.1         YES manual up                    up", "annotations": [{"field": "Interface", "note": "Interface name"}, {"field": "IP-Address", "note": "Configured IPv4 (or unassigned)"}, {"field": "OK?", "note": "IP stack OK on interface"}, {"field": "Method", "note": "How address was learned (NVRAM, DHCP, manual)"}, {"field": "Status", "note": "Line protocol admin/physical state"}, {"field": "Protocol", "note": "Layer-3 protocol state"}], "when": "First command after SSH \u2014 verify up/up and expected IPs.", "whenNot": "Not for VLAN trunk membership or MAC tables.", "safety": "safe", "related": ["cisco-sh-ip-route", "cisco-sh-int"], "tags": ["interfaces", "l3", "troubleshooting", "beginner"], "equivalents": {"juniper": "show interfaces terse", "paloalto": "show interface all", "linux": "ip -br addr", "powershell": "Get-NetIPAddress"}, "sandboxOutput": "Interface              IP-Address      OK? Method Status                Protocol\nGigabitEthernet0/0     10.1.1.1        YES NVRAM  up                    up\nGigabitEthernet0/1     unassigned      YES NVRAM  administratively down down\nLoopback0              1.1.1.1         YES manual up                    up"}, {"id": "cisco-sh-ip-route", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show ip route", "aliases": ["sh ip ro"], "purpose": "Displays the IPv4 Routing Information Base (RIB): how the router forwards packets to each destination prefix.", "tokens": [{"t": "show", "d": "Display"}, {"t": "ip", "d": "IPv4"}, {"t": "route", "d": "Routing table"}], "syntax": "show ip route [prefix]", "flags": [{"f": "prefix", "d": "Optional specific network to lookup"}], "sample": "Codes: C - connected, S - static, O - OSPF, D - EIGRP, * - candidate default\nGateway of last resort is 10.1.1.254 to network 0.0.0.0\n\nS*    0.0.0.0/0 [1/0] via 10.1.1.254\nC     10.1.1.0/24 is directly connected, GigabitEthernet0/0\nO     192.168.10.0/24 [110/2] via 10.1.1.2, 00:12:44, GigabitEthernet0/0", "annotations": [{"field": "Code letter", "note": "Protocol that installed the route"}, {"field": "[AD/Metric]", "note": "Administrative distance / metric"}, {"field": "via", "note": "Next-hop IP"}, {"field": "interface", "note": "Egress interface"}], "when": "Verify reachability path, default route, and protocol ownership.", "whenNot": "Does not show CEF adjacency or ARP \u2014 use show ip cef / show arp.", "safety": "safe", "related": ["cisco-sh-ip-int-br", "cisco-ping"], "tags": ["routing", "ospf", "static", "troubleshooting"], "equivalents": {"juniper": "show route", "paloalto": "show routing route", "linux": "ip route", "powershell": "Get-NetRoute"}, "sandboxOutput": "Codes: C - connected, S - static, O - OSPF, D - EIGRP, * - candidate default\nGateway of last resort is 10.1.1.254 to network 0.0.0.0\n\nS*    0.0.0.0/0 [1/0] via 10.1.1.254\nC     10.1.1.0/24 is directly connected, GigabitEthernet0/0\nO     192.168.10.0/24 [110/2] via 10.1.1.2, 00:12:44, GigabitEthernet0/0"}, {"id": "cisco-sh-cdp-nei", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show cdp neighbors", "aliases": ["sh cdp nei"], "purpose": "Lists directly connected Cisco Discovery Protocol neighbors \u2014 useful for mapping physical topology.", "tokens": [{"t": "show", "d": "Display"}, {"t": "cdp", "d": "Cisco Discovery Protocol"}, {"t": "neighbors", "d": "Adjacent devices"}], "syntax": "show cdp neighbors [detail]", "flags": [{"f": "detail", "d": "Adds IP, platform, software version"}], "sample": "Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID\nSW1.lab.local    Gig 0/1           150        S I         WS-C2960  Gig 0/24\nR2               Gig 0/0           162        R S I       ISR4331   Gig 0/0", "annotations": [{"field": "Device ID", "note": "Neighbor hostname"}, {"field": "Local Intrfce", "note": "Your interface facing neighbor"}, {"field": "Port ID", "note": "Neighbor's interface"}], "when": "Cable tracing and verifying switch uplink ports.", "whenNot": "CDP may be disabled for security; LLDP is multi-vendor.", "safety": "safe", "related": ["cisco-sh-lldp-nei"], "tags": ["discovery", "l2", "topology"], "equivalents": {"juniper": "show lldp neighbors", "paloalto": "show lldp neighbors all", "linux": "lldpctl", "powershell": "Get-NetNeighbor"}, "sandboxOutput": "Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID\nSW1.lab.local    Gig 0/1           150        S I         WS-C2960  Gig 0/24\nR2               Gig 0/0           162        R S I       ISR4331   Gig 0/0"}, {"id": "cisco-sh-lldp-nei", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show lldp neighbors", "aliases": ["sh lldp nei"], "purpose": "Shows IEEE 802.1AB LLDP neighbors \u2014 works across vendors unlike CDP.", "tokens": [{"t": "show", "d": "Display"}, {"t": "lldp", "d": "Link Layer Discovery Protocol"}, {"t": "neighbors", "d": "Adjacent devices"}], "syntax": "show lldp neighbors [detail]", "flags": [], "sample": "Capability codes: (R) Router, (B) Bridge, (T) Telephone, (W) WLAN AP\nDevice ID           Local Intf     Hold-time  Capability      Port ID\ncore-sw01           Gi0/2          120        B               Gi1/0/48", "annotations": [{"field": "Capability", "note": "Device type hints (router/bridge/phone)"}], "when": "Multi-vendor environments and VoIP phone discovery.", "whenNot": "Requires LLDP enabled globally and per-interface.", "safety": "safe", "related": ["cisco-sh-cdp-nei"], "tags": ["discovery", "l2", "multi-vendor"], "equivalents": {"juniper": "show lldp neighbors", "paloalto": "show lldp neighbors all", "linux": "lldpctl"}, "sandboxOutput": "Capability codes: (R) Router, (B) Bridge, (T) Telephone, (W) WLAN AP\nDevice ID           Local Intf     Hold-time  Capability      Port ID\ncore-sw01           Gi0/2          120        B               Gi1/0/48"}, {"id": "cisco-sh-vlan", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show vlan brief", "aliases": ["sh vlan br"], "purpose": "Lists VLANs, names, status, and which access ports belong to each VLAN.", "tokens": [{"t": "show", "d": "Display"}, {"t": "vlan", "d": "VLAN database"}, {"t": "brief", "d": "Compact view"}], "syntax": "show vlan brief", "flags": [], "sample": "VLAN Name                             Status    Ports\n1    default                          active    Gi0/3, Gi0/4\n10   USERS                            active    Gi0/5, Gi0/6, Gi0/7\n20   SERVERS                          active    Gi0/8\n1002 fddi-default                     act/unsup", "annotations": [{"field": "VLAN", "note": "VLAN ID"}, {"field": "Ports", "note": "Access ports in this VLAN (not trunks)"}], "when": "Verify VLAN exists and access-port membership.", "whenNot": "Trunk allowed lists are NOT shown here \u2014 use show interfaces trunk.", "safety": "safe", "related": ["cisco-sh-int-trunk", "cisco-conf-vlan"], "tags": ["vlan", "l2", "switching"], "equivalents": {"juniper": "show vlans", "linux": "bridge vlan"}, "sandboxOutput": "VLAN Name                             Status    Ports\n1    default                          active    Gi0/3, Gi0/4\n10   USERS                            active    Gi0/5, Gi0/6, Gi0/7\n20   SERVERS                          active    Gi0/8\n1002 fddi-default                     act/unsup"}, {"id": "cisco-sh-int-trunk", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show interfaces trunk", "aliases": ["sh int trunk"], "purpose": "Shows trunk ports, encapsulation, native VLAN, and allowed VLAN lists.", "tokens": [{"t": "show", "d": "Display"}, {"t": "interfaces", "d": "Interface data"}, {"t": "trunk", "d": "802.1Q trunks only"}], "syntax": "show interfaces trunk", "flags": [], "sample": "Port        Mode         Encapsulation  Status        Native vlan\nGi0/1       on           802.1q         trunking      1\n\nPort        Vlans allowed on trunk\nGi0/1       1-4094\n\nPort        Vlans in spanning tree forwarding state and not pruned\nGi0/1       1,10,20", "annotations": [{"field": "Native vlan", "note": "Untagged VLAN \u2014 mismatch causes leaks"}, {"field": "allowed", "note": "Which VLANs may cross the trunk"}], "when": "Troubleshoot inter-switch VLAN connectivity.", "whenNot": "Access ports will not appear.", "safety": "safe", "related": ["cisco-sh-vlan"], "tags": ["trunk", "vlan", "l2"], "equivalents": {"juniper": "show interfaces terse | match trunk"}, "sandboxOutput": "Port        Mode         Encapsulation  Status        Native vlan\nGi0/1       on           802.1q         trunking      1\n\nPort        Vlans allowed on trunk\nGi0/1       1-4094\n\nPort        Vlans in spanning tree forwarding state and not pruned\nGi0/1       1,10,20"}, {"id": "cisco-conf-vlan", "vendor": "cisco", "family": "IOS/XE", "mode": "config", "cmd": "vlan", "aliases": ["vlan 10"], "purpose": "Creates or enters VLAN configuration; assign name and (on some platforms) other VLAN attributes.", "tokens": [{"t": "vlan", "d": "Enter VLAN config"}, {"t": "<id>", "d": "VLAN number 1-4094"}], "syntax": "vlan <id>\n name <NAME>", "flags": [{"f": "name", "d": "Human-readable VLAN name"}], "sample": "SW1(config)# vlan 10\nSW1(config-vlan)# name USERS\nSW1(config-vlan)# exit", "annotations": [{"field": "config-vlan", "note": "VLAN configuration submode"}], "when": "Add a new Layer-2 segment before assigning access ports.", "whenNot": "Does not assign ports \u2014 use switchport access vlan.", "safety": "caution", "related": ["cisco-swport-access", "cisco-sh-vlan"], "tags": ["vlan", "config", "l2"], "equivalents": {"juniper": "set vlans USERS vlan-id 10"}, "sandboxOutput": "SW1(config)# vlan 10\nSW1(config-vlan)# name USERS\nSW1(config-vlan)# exit"}, {"id": "cisco-swport-access", "vendor": "cisco", "family": "IOS/XE", "mode": "config-if", "cmd": "switchport access vlan", "aliases": [], "purpose": "Places a switch port into a specific VLAN as an access (untagged) port.", "tokens": [{"t": "switchport", "d": "L2 switching features"}, {"t": "access", "d": "Non-trunk mode"}, {"t": "vlan", "d": "Target VLAN ID"}], "syntax": "interface <if>\n switchport mode access\n switchport access vlan <id>", "flags": [], "sample": "SW1(config)# interface Gi0/5\nSW1(config-if)# switchport mode access\nSW1(config-if)# switchport access vlan 10", "annotations": [], "when": "End-user or server ports that should not trunk.", "whenNot": "Do not use on uplink trunks.", "safety": "caution", "related": ["cisco-conf-vlan", "cisco-sh-vlan"], "tags": ["vlan", "access", "config"], "equivalents": {"juniper": "set interfaces ge-0/0/5 unit 0 family ethernet-switching vlan members USERS"}, "sandboxOutput": "SW1(config)# interface Gi0/5\nSW1(config-if)# switchport mode access\nSW1(config-if)# switchport access vlan 10"}, {"id": "cisco-acl-ext", "vendor": "cisco", "family": "IOS/XE", "mode": "config", "cmd": "ip access-list extended", "aliases": ["access-list"], "purpose": "Creates an extended ACL that can match source, destination, protocol, and ports.", "tokens": [{"t": "ip", "d": "IPv4 ACL"}, {"t": "access-list", "d": "Filter list"}, {"t": "extended", "d": "5-tuple capable"}], "syntax": "ip access-list extended <NAME>\n permit|deny <proto> <src> <dst> [eq port]", "flags": [], "sample": "R1(config)# ip access-list extended BLOCK_SSH\nR1(config-ext-nacl)# deny tcp any 10.1.1.10 0.0.0.0 eq 22\nR1(config-ext-nacl)# permit ip any any", "annotations": [{"field": "wildcard mask", "note": "0 bits must match; opposite of subnet mask"}, {"field": "order", "note": "First-match wins; implicit deny at end"}], "when": "Traffic filtering on interfaces or VTY lines.", "whenNot": "Wrong order = blackhole. Always end with explicit permit if needed.", "safety": "danger", "related": ["cisco-sh-access-lists"], "tags": ["acl", "security", "filtering"], "equivalents": {"juniper": "set firewall family inet filter ...", "paloalto": "security policy rules", "linux": "iptables/nft", "powershell": "New-NetFirewallRule"}, "sandboxOutput": "R1(config)# ip access-list extended BLOCK_SSH\nR1(config-ext-nacl)# deny tcp any 10.1.1.10 0.0.0.0 eq 22\nR1(config-ext-nacl)# permit ip any any"}, {"id": "cisco-sh-access-lists", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show access-lists", "aliases": ["sh access-lists", "sh ip access-lists"], "purpose": "Displays configured ACLs and hit counts per ACE.", "tokens": [{"t": "show", "d": "Display"}, {"t": "access-lists", "d": "All ACLs"}], "syntax": "show access-lists [name]", "flags": [], "sample": "Extended IP access list BLOCK_SSH\n    10 deny tcp any host 10.1.1.10 eq 22 (42 matches)\n    20 permit ip any any (8912 matches)", "annotations": [{"field": "matches", "note": "Packets hitting this entry \u2014 proves ACL is active"}], "when": "Confirm ACL logic and whether traffic is matching.", "whenNot": "Does not show where ACL is applied \u2014 use show ip interface.", "safety": "safe", "related": ["cisco-acl-ext"], "tags": ["acl", "security", "troubleshooting"], "equivalents": {"juniper": "show firewall", "paloalto": "show running security-policy"}, "sandboxOutput": "Extended IP access list BLOCK_SSH\n    10 deny tcp any host 10.1.1.10 eq 22 (42 matches)\n    20 permit ip any any (8912 matches)"}, {"id": "cisco-nat-overload", "vendor": "cisco", "family": "IOS/XE", "mode": "config", "cmd": "ip nat inside source list", "aliases": [], "purpose": "Configures PAT (NAT overload) so many private hosts share a public IP.", "tokens": [{"t": "ip nat", "d": "NAT feature"}, {"t": "inside source", "d": "Translate inside addresses"}, {"t": "list", "d": "ACL defining interesting traffic"}, {"t": "interface overload", "d": "PAT using interface IP"}], "syntax": "ip nat inside source list <ACL> interface <IF> overload", "flags": [], "sample": "R1(config)# access-list 1 permit 192.168.1.0 0.0.0.255\nR1(config)# ip nat inside source list 1 interface GigabitEthernet0/0 overload\nR1(config)# interface Gi0/1\nR1(config-if)# ip nat inside\nR1(config)# interface Gi0/0\nR1(config-if)# ip nat outside", "annotations": [{"field": "inside/outside", "note": "Must mark interfaces correctly or NAT never triggers"}], "when": "Internet edge for private LAN clients.", "whenNot": "Breaks inbound connections unless static NAT/port-forward added.", "safety": "caution", "related": ["cisco-sh-ip-nat"], "tags": ["nat", "pat", "edge"], "equivalents": {"juniper": "set security nat source ...", "paloalto": "source NAT rule", "linux": "iptables -t nat MASQUERADE"}, "sandboxOutput": "R1(config)# access-list 1 permit 192.168.1.0 0.0.0.255\nR1(config)# ip nat inside source list 1 interface GigabitEthernet0/0 overload\nR1(config)# interface Gi0/1\nR1(config-if)# ip nat inside\nR1(config)# interface Gi0/0\nR1(config-if)# ip nat outside"}, {"id": "cisco-sh-ip-nat", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show ip nat translations", "aliases": ["sh ip nat trans"], "purpose": "Shows active NAT/PAT translation table entries.", "tokens": [{"t": "show", "d": "Display"}, {"t": "ip nat", "d": "NAT feature"}, {"t": "translations", "d": "XLATE table"}], "syntax": "show ip nat translations", "flags": [], "sample": "Pro Inside global      Inside local       Outside local      Outside global\ntcp 203.0.113.5:40221 192.168.1.50:53122 93.184.216.34:443 93.184.216.34:443", "annotations": [{"field": "Inside local", "note": "Private host IP:port"}, {"field": "Inside global", "note": "Public mapped IP:port"}], "when": "Prove NAT is translating; find which public port maps to which host.", "whenNot": "Empty table means no traffic matched NAT interesting ACL.", "safety": "safe", "related": ["cisco-nat-overload"], "tags": ["nat", "troubleshooting"], "equivalents": {"juniper": "show security nat source rule all", "paloalto": "show running nat-policy"}, "sandboxOutput": "Pro Inside global      Inside local       Outside local      Outside global\ntcp 203.0.113.5:40221 192.168.1.50:53122 93.184.216.34:443 93.184.216.34:443"}, {"id": "cisco-sh-ip-ospf", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show ip ospf neighbor", "aliases": ["sh ip ospf nei"], "purpose": "Lists OSPF neighbors and adjacency state (FULL is healthy).", "tokens": [{"t": "show", "d": "Display"}, {"t": "ip ospf", "d": "OSPF process"}, {"t": "neighbor", "d": "Adjacencies"}], "syntax": "show ip ospf neighbor", "flags": [], "sample": "Neighbor ID     Pri   State           Dead Time   Address         Interface\n2.2.2.2           1   FULL/DR         00:00:38    10.1.1.2        GigabitEthernet0/0", "annotations": [{"field": "State", "note": "2WAY or FULL expected; INIT/EXSTART stuck = problem"}, {"field": "Dead Time", "note": "Countdown to declare neighbor dead"}], "when": "Verify OSPF adjacency after link/config changes.", "whenNot": "Does not show LSDB or routes \u2014 use show ip ospf database / show ip route ospf.", "safety": "safe", "related": ["cisco-sh-ip-route", "cisco-router-ospf"], "tags": ["ospf", "routing", "igp"], "equivalents": {"juniper": "show ospf neighbor", "paloalto": "show routing protocol ospf neighbor", "linux": "vtysh -c 'show ip ospf neighbor'"}, "sandboxOutput": "Neighbor ID     Pri   State           Dead Time   Address         Interface\n2.2.2.2           1   FULL/DR         00:00:38    10.1.1.2        GigabitEthernet0/0"}, {"id": "cisco-router-ospf", "vendor": "cisco", "family": "IOS/XE", "mode": "config", "cmd": "router ospf", "aliases": [], "purpose": "Enters OSPF process configuration; network statements or interface ip ospf area bring links into OSPF.", "tokens": [{"t": "router", "d": "Routing protocol process"}, {"t": "ospf", "d": "OSPF"}, {"t": "<pid>", "d": "Local process ID (not area)"}], "syntax": "router ospf <pid>\n network <ip> <wildcard> area <area>\n router-id <id>", "flags": [], "sample": "R1(config)# router ospf 1\nR1(config-router)# router-id 1.1.1.1\nR1(config-router)# network 10.1.1.0 0.0.0.255 area 0", "annotations": [{"field": "process ID", "note": "Locally significant only"}, {"field": "area 0", "note": "Backbone area in single-area designs"}], "when": "Enable dynamic IGP between routers.", "whenNot": "Mismatch area/hello/dead/network type breaks adjacency.", "safety": "caution", "related": ["cisco-sh-ip-ospf"], "tags": ["ospf", "config", "routing"], "equivalents": {"juniper": "set protocols ospf area 0 interface ge-0/0/0.0"}, "sandboxOutput": "R1(config)# router ospf 1\nR1(config-router)# router-id 1.1.1.1\nR1(config-router)# network 10.1.1.0 0.0.0.255 area 0"}, {"id": "cisco-ping", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "ping", "aliases": [], "purpose": "Sends ICMP echo requests to test end-to-end IP reachability from the device.", "tokens": [{"t": "ping", "d": "ICMP echo"}, {"t": "<dest>", "d": "Target IP or hostname"}], "syntax": "ping [vrf <name>] <destination>", "flags": [{"f": "vrf", "d": "Source from VRF"}, {"f": "source", "d": "Extended ping source interface/IP"}], "sample": "Type escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 8.8.8.8, timeout is 2 seconds:\n!!!!!\nSuccess rate is 100 percent (5/5), round-trip min/avg/max = 12/14/18 ms", "annotations": [{"field": "!", "note": "Reply received"}, {"field": ".", "note": "Timeout"}], "when": "Quick reachability test; use extended ping for source interface.", "whenNot": "Success does not prove TCP/UDP app health.", "safety": "safe", "related": ["cisco-traceroute", "cisco-sh-ip-route"], "tags": ["troubleshooting", "icmp", "beginner"], "equivalents": {"juniper": "ping", "paloalto": "ping host", "linux": "ping", "powershell": "Test-Connection"}, "sandboxOutput": "Type escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 8.8.8.8, timeout is 2 seconds:\n!!!!!\nSuccess rate is 100 percent (5/5), round-trip min/avg/max = 12/14/18 ms"}, {"id": "cisco-traceroute", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "traceroute", "aliases": ["trace"], "purpose": "Maps the hop-by-hop path to a destination using TTL expiry.", "tokens": [{"t": "traceroute", "d": "Path discovery"}, {"t": "<dest>", "d": "Target"}], "syntax": "traceroute <destination>", "flags": [], "sample": "Tracing the route to 8.8.8.8\n  1 10.1.1.254 4 msec 4 msec 4 msec\n  2 203.0.113.1 12 msec 11 msec 12 msec\n  3 8.8.8.8 14 msec 14 msec 15 msec", "annotations": [{"field": "*", "note": "Hop did not reply (may still forward)"}], "when": "Find where packets stop along a path.", "whenNot": "Firewalls often block TTL-exceeded messages.", "safety": "safe", "related": ["cisco-ping"], "tags": ["troubleshooting", "path"], "equivalents": {"juniper": "traceroute", "paloalto": "traceroute host", "linux": "traceroute", "powershell": "Test-NetConnection -TraceRoute"}, "sandboxOutput": "Tracing the route to 8.8.8.8\n  1 10.1.1.254 4 msec 4 msec 4 msec\n  2 203.0.113.1 12 msec 11 msec 12 msec\n  3 8.8.8.8 14 msec 14 msec 15 msec"}, {"id": "cisco-conf-t", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "configure terminal", "aliases": ["conf t", "config t"], "purpose": "Enters global configuration mode where running-config can be changed.", "tokens": [{"t": "configure", "d": "Enter config"}, {"t": "terminal", "d": "From this terminal session"}], "syntax": "configure terminal", "flags": [], "sample": "R1# configure terminal\nEnter configuration commands, one per line. End with CNTL/Z.\nR1(config)#", "annotations": [{"field": "(config)#", "note": "Global config prompt"}], "when": "Any configuration change on IOS/XE.", "whenNot": "Changes apply immediately to running-config \u2014 plan rollbacks.", "safety": "caution", "related": ["cisco-wr", "cisco-show-run"], "tags": ["config", "modes", "beginner"], "equivalents": {"juniper": "configure", "paloalto": "configure"}, "sandboxOutput": "R1# configure terminal\nEnter configuration commands, one per line. End with CNTL/Z.\nR1(config)#"}, {"id": "cisco-wr", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "write memory", "aliases": ["wr", "copy run start"], "purpose": "Saves running-config to startup-config (NVRAM) so changes survive reload.", "tokens": [{"t": "write", "d": "Write config"}, {"t": "memory", "d": "To NVRAM startup"}], "syntax": "write memory\n! or: copy running-config startup-config", "flags": [], "sample": "R1# write memory\nBuilding configuration...\n[OK]", "annotations": [], "when": "After verified config changes in production (during change window).", "whenNot": "Saving a bad config makes reload restore the bad state \u2014 confirm first.", "safety": "caution", "related": ["cisco-show-run", "cisco-conf-t"], "tags": ["save", "config", "persistence"], "equivalents": {"juniper": "commit", "paloalto": "commit", "linux": "persist via netplan/nm/ifup scripts", "powershell": "Set-Net* changes persist by default"}, "sandboxOutput": "R1# write memory\nBuilding configuration...\n[OK]"}, {"id": "cisco-show-run", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show running-config", "aliases": ["sh run", "show run"], "purpose": "Displays the active configuration currently used by the device.", "tokens": [{"t": "show", "d": "Display"}, {"t": "running-config", "d": "Active config in RAM"}], "syntax": "show running-config [section <kw>] [| include <kw>]", "flags": [{"f": "| include", "d": "Filter lines"}, {"f": "section", "d": "Show related config block"}], "sample": "Building configuration...\nCurrent configuration : 4521 bytes\n!\nhostname R1\n!\ninterface GigabitEthernet0/0\n ip address 10.1.1.1 255.255.255.0\n!", "annotations": [], "when": "Audit what is actually configured right now.", "whenNot": "Can be huge \u2014 filter with pipes.", "safety": "safe", "related": ["cisco-wr"], "tags": ["config", "audit"], "equivalents": {"juniper": "show configuration", "paloalto": "show config running"}, "sandboxOutput": "Building configuration...\nCurrent configuration : 4521 bytes\n!\nhostname R1\n!\ninterface GigabitEthernet0/0\n ip address 10.1.1.1 255.255.255.0\n!"}, {"id": "cisco-ssh", "vendor": "cisco", "family": "IOS/XE", "mode": "config", "cmd": "ip domain-name / crypto key / line vty", "aliases": [], "purpose": "Enables SSH management access: domain name, RSA key, VTY transport ssh.", "tokens": [{"t": "ip domain-name", "d": "Required for RSA key label"}, {"t": "crypto key generate rsa", "d": "SSH host key"}, {"t": "line vty", "d": "Remote terminal lines"}, {"t": "transport input ssh", "d": "Allow SSH only"}], "syntax": "ip domain-name lab.local\ncrypto key generate rsa modulus 2048\nline vty 0 4\n transport input ssh\n login local", "flags": [], "sample": "R1(config)# ip domain-name lab.local\nR1(config)# crypto key generate rsa modulus 2048\nR1(config)# username admin privilege 15 secret Cisco123\nR1(config)# line vty 0 4\nR1(config-line)# login local\nR1(config-line)# transport input ssh", "annotations": [], "when": "Secure remote management instead of Telnet.", "whenNot": "Weak passwords and open VTY ACLs are common failures.", "safety": "caution", "related": ["cisco-sh-ip-int-br"], "tags": ["ssh", "security", "mgmt"], "equivalents": {"juniper": "set system services ssh", "paloalto": "set deviceconfig system ssh"}, "sandboxOutput": "R1(config)# ip domain-name lab.local\nR1(config)# crypto key generate rsa modulus 2048\nR1(config)# username admin privilege 15 secret Cisco123\nR1(config)# line vty 0 4\nR1(config-line)# login local\nR1(config-line)# transport input ssh"}, {"id": "cisco-sh-int", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show interfaces", "aliases": ["sh int"], "purpose": "Detailed interface counters: errors, drops, speed/duplex, last input/output.", "tokens": [{"t": "show", "d": "Display"}, {"t": "interfaces", "d": "Full interface stats"}], "syntax": "show interfaces [interface]", "flags": [], "sample": "GigabitEthernet0/0 is up, line protocol is up\n  Hardware is CSR vNIC, address is aabb.cc00.0100\n  MTU 1500 bytes, BW 1000000 Kbit/sec\n  5 minute input rate 12000 bits/sec, 15 packets/sec\n  0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored\n  0 output errors, 0 collisions, 0 interface resets", "annotations": [{"field": "CRC/input errors", "note": "Often cabling or duplex mismatch"}, {"field": "BW", "note": "Bandwidth used for routing metrics"}], "when": "Layer-1/2 troubleshooting and error hunting.", "whenNot": "Verbose \u2014 prefer show ip int brief for quick status.", "safety": "safe", "related": ["cisco-sh-ip-int-br"], "tags": ["interfaces", "l1", "errors"], "equivalents": {"juniper": "show interfaces extensive", "paloalto": "show interface <name>", "linux": "ip -s link", "powershell": "Get-NetAdapterStatistics"}, "sandboxOutput": "GigabitEthernet0/0 is up, line protocol is up\n  Hardware is CSR vNIC, address is aabb.cc00.0100\n  MTU 1500 bytes, BW 1000000 Kbit/sec\n  5 minute input rate 12000 bits/sec, 15 packets/sec\n  0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored\n  0 output errors, 0 collisions, 0 interface resets"}, {"id": "cisco-sh-arp", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show ip arp", "aliases": ["sh arp", "show arp"], "purpose": "Displays the ARP table mapping IPv4 addresses to MAC addresses.", "tokens": [{"t": "show", "d": "Display"}, {"t": "ip arp", "d": "ARP cache"}], "syntax": "show ip arp [ip]", "flags": [], "sample": "Protocol  Address          Age (min)  Hardware Addr   Type   Interface\nInternet  10.1.1.2                3   aabb.cc00.0200  ARPA   GigabitEthernet0/0\nInternet  10.1.1.1                -   aabb.cc00.0100  ARPA   GigabitEthernet0/0", "annotations": [{"field": "Age", "note": "- means local interface"}, {"field": "Hardware Addr", "note": "MAC of next hop/host"}], "when": "Verify L2 resolution for a next hop.", "whenNot": "Incomplete ARP = L2 problem or host down.", "safety": "safe", "related": ["cisco-ping"], "tags": ["arp", "l2", "troubleshooting"], "equivalents": {"juniper": "show arp", "paloalto": "show arp all", "linux": "ip neigh", "powershell": "Get-NetNeighbor"}, "sandboxOutput": "Protocol  Address          Age (min)  Hardware Addr   Type   Interface\nInternet  10.1.1.2                3   aabb.cc00.0200  ARPA   GigabitEthernet0/0\nInternet  10.1.1.1                -   aabb.cc00.0100  ARPA   GigabitEthernet0/0"}, {"id": "cisco-eigrp-nei", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show ip eigrp neighbors", "aliases": ["sh ip eigrp nei"], "purpose": "Lists EIGRP neighbors and hold timers.", "tokens": [{"t": "show", "d": "Display"}, {"t": "ip eigrp", "d": "EIGRP"}, {"t": "neighbors", "d": "Adjacencies"}], "syntax": "show ip eigrp neighbors", "flags": [], "sample": "H   Address         Interface       Hold Uptime   SRTT   RTO  Q  Seq\n0   10.1.1.2        Gi0/0             13 00:45:12   12   100  0  45", "annotations": [{"field": "Q", "note": "Queue count >0 may indicate congestion/MTU issues"}], "when": "Confirm EIGRP adjacency health.", "whenNot": "Cisco-proprietary \u2014 not for multi-vendor cores.", "safety": "safe", "related": ["cisco-sh-ip-route"], "tags": ["eigrp", "routing"], "equivalents": {"juniper": "(no EIGRP \u2014 use OSPF/IS-IS)", "linux": "n/a"}, "sandboxOutput": "H   Address         Interface       Hold Uptime   SRTT   RTO  Q  Seq\n0   10.1.1.2        Gi0/0             13 00:45:12   12   100  0  45"}, {"id": "junos-sh-int-terse", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "show interfaces terse", "aliases": ["show int terse"], "purpose": "Compact list of interfaces with admin/link status and family addresses \u2014 Junos equivalent of show ip int brief.", "tokens": [{"t": "show", "d": "Operational command"}, {"t": "interfaces", "d": "IFD/IFL view"}, {"t": "terse", "d": "One-line summary"}], "syntax": "show interfaces terse", "flags": [], "sample": "Interface               Admin Link Proto    Local                 Remote\nge-0/0/0                up    up\nge-0/0/0.0              up    up   inet     10.1.1.1/24\nlo0.0                   up    up   inet     1.1.1.1             --> 0/0\nfxp0.0                  up    up   inet     192.168.1.10/24", "annotations": [{"field": "Admin/Link", "note": "Admin up + Link up = healthy"}, {"field": "Proto/Local", "note": "Address family and IP"}], "when": "First look after login on Junos.", "whenNot": "Does not show errors \u2014 use show interfaces extensive.", "safety": "safe", "related": ["junos-sh-route", "junos-sh-int-ext"], "tags": ["interfaces", "beginner"], "equivalents": {"cisco": "show ip interface brief", "paloalto": "show interface all", "linux": "ip -br addr", "powershell": "Get-NetIPAddress"}, "sandboxOutput": "Interface               Admin Link Proto    Local                 Remote\nge-0/0/0                up    up\nge-0/0/0.0              up    up   inet     10.1.1.1/24\nlo0.0                   up    up   inet     1.1.1.1             --> 0/0\nfxp0.0                  up    up   inet     192.168.1.10/24"}, {"id": "junos-sh-route", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "show route", "aliases": [], "purpose": "Displays the routing table(s); inet.0 is the main IPv4 unicast table.", "tokens": [{"t": "show", "d": "Operational"}, {"t": "route", "d": "RIB"}], "syntax": "show route [destination]", "flags": [], "sample": "inet.0: 8 destinations, 8 routes (8 active, 0 holddown, 0 hidden)\n+ = Active Route, - = Last Active, * = Both\n\n0.0.0.0/0          *[Static/5] 1d 02:11:08\n                    > to 10.1.1.254 via ge-0/0/0.0\n10.1.1.0/24        *[Direct/0] 1d 02:11:10\n                    > via ge-0/0/0.0", "annotations": [{"field": "*", "note": "Active route selected for forwarding"}, {"field": "[Protocol/Pref]", "note": "Preference \u2248 Cisco AD"}], "when": "Verify forwarding path and protocol preference.", "whenNot": "Hidden routes need show route hidden.", "safety": "safe", "related": ["junos-sh-int-terse"], "tags": ["routing"], "equivalents": {"cisco": "show ip route", "paloalto": "show routing route", "linux": "ip route", "powershell": "Get-NetRoute"}, "sandboxOutput": "inet.0: 8 destinations, 8 routes (8 active, 0 holddown, 0 hidden)\n+ = Active Route, - = Last Active, * = Both\n\n0.0.0.0/0          *[Static/5] 1d 02:11:08\n                    > to 10.1.1.254 via ge-0/0/0.0\n10.1.1.0/24        *[Direct/0] 1d 02:11:10\n                    > via ge-0/0/0.0"}, {"id": "junos-configure", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "configure", "aliases": ["edit", "configure private"], "purpose": "Enters candidate configuration mode. Changes are NOT live until commit.", "tokens": [{"t": "configure", "d": "Enter config mode"}], "syntax": "configure\n# or: configure private | exclusive", "flags": [], "sample": "user@R1> configure\nEntering configuration mode\n[edit]\nuser@R1#", "annotations": [{"field": "[edit]", "note": "Top of candidate hierarchy"}, {"field": "candidate", "note": "Edits buffered until commit"}], "when": "Any Junos configuration change.", "whenNot": "Forgetting commit means changes never apply.", "safety": "caution", "related": ["junos-commit", "junos-rollback"], "tags": ["config", "modes", "commit-model"], "equivalents": {"cisco": "configure terminal", "paloalto": "configure"}, "sandboxOutput": "user@R1> configure\nEntering configuration mode\n[edit]\nuser@R1#"}, {"id": "junos-set", "vendor": "juniper", "family": "Junos", "mode": "config", "cmd": "set", "aliases": [], "purpose": "Adds or modifies a statement in the candidate configuration hierarchy.", "tokens": [{"t": "set", "d": "Create/modify path"}, {"t": "<path>", "d": "Hierarchy path and value"}], "syntax": "set <hierarchy...> <value>", "flags": [], "sample": "[edit]\nuser@R1# set interfaces ge-0/0/0 unit 0 family inet address 10.1.1.1/24\nuser@R1# set routing-options static route 0.0.0.0/0 next-hop 10.1.1.254", "annotations": [], "when": "Build candidate config changes.", "whenNot": "set alone does not activate \u2014 must commit.", "safety": "caution", "related": ["junos-commit", "junos-delete"], "tags": ["config"], "equivalents": {"cisco": "(config) interface / ip address", "paloalto": "set network interface ..."}, "sandboxOutput": "[edit]\nuser@R1# set interfaces ge-0/0/0 unit 0 family inet address 10.1.1.1/24\nuser@R1# set routing-options static route 0.0.0.0/0 next-hop 10.1.1.254"}, {"id": "junos-delete", "vendor": "juniper", "family": "Junos", "mode": "config", "cmd": "delete", "aliases": [], "purpose": "Removes a statement from the candidate configuration.", "tokens": [{"t": "delete", "d": "Remove hierarchy"}, {"t": "<path>", "d": "What to remove"}], "syntax": "delete <hierarchy...>", "flags": [], "sample": "[edit]\nuser@R1# delete interfaces ge-0/0/1 unit 0 family inet address 10.2.2.1/24", "annotations": [], "when": "Remove unused or incorrect config before commit.", "whenNot": "Deleting a parent removes all children.", "safety": "danger", "related": ["junos-rollback", "junos-commit"], "tags": ["config"], "equivalents": {"cisco": "no <command>", "paloalto": "delete ..."}, "sandboxOutput": "[edit]\nuser@R1# delete interfaces ge-0/0/1 unit 0 family inet address 10.2.2.1/24"}, {"id": "junos-commit", "vendor": "juniper", "family": "Junos", "mode": "config", "cmd": "commit", "aliases": ["commit check", "commit confirmed"], "purpose": "Applies the candidate configuration to become the active (committed) config.", "tokens": [{"t": "commit", "d": "Activate candidate"}, {"t": "check", "d": "Validate only"}, {"t": "confirmed", "d": "Auto-rollback unless confirmed"}], "syntax": "commit\ncommit check\ncommit confirmed 5", "flags": [{"f": "confirmed <min>", "d": "Rollback unless commit confirmed within N minutes"}], "sample": "[edit]\nuser@R1# commit\ncommit complete", "annotations": [{"field": "commit confirmed", "note": "Safety net for remote changes"}], "when": "After reviewing show | compare.", "whenNot": "commit can disconnect you if you lock yourself out \u2014 use confirmed.", "safety": "caution", "related": ["junos-rollback", "junos-compare"], "tags": ["commit", "config", "safety"], "equivalents": {"cisco": "write memory (but Cisco applies immediately)", "paloalto": "commit"}, "sandboxOutput": "[edit]\nuser@R1# commit\ncommit complete"}, {"id": "junos-rollback", "vendor": "juniper", "family": "Junos", "mode": "config", "cmd": "rollback", "aliases": [], "purpose": "Restores a previous committed configuration into the candidate (rollback 0 = last commit).", "tokens": [{"t": "rollback", "d": "Load old commit"}, {"t": "<n>", "d": "0-49 history index"}], "syntax": "rollback [0-49]\ncommit", "flags": [], "sample": "[edit]\nuser@R1# rollback 1\nload complete\nuser@R1# commit", "annotations": [{"field": "rollback 0", "note": "Discard uncommitted candidate changes"}], "when": "Recover from bad commits quickly.", "whenNot": "Must still commit after rollback to activate.", "safety": "caution", "related": ["junos-commit"], "tags": ["rollback", "safety"], "equivalents": {"cisco": "configure replace / manual revert", "paloalto": "load config from ..."}, "sandboxOutput": "[edit]\nuser@R1# rollback 1\nload complete\nuser@R1# commit"}, {"id": "junos-compare", "vendor": "juniper", "family": "Junos", "mode": "config", "cmd": "show | compare", "aliases": [], "purpose": "Diffs candidate vs active configuration \u2014 mandatory review before commit.", "tokens": [{"t": "show", "d": "Display candidate"}, {"t": "| compare", "d": "Diff against committed"}], "syntax": "show | compare", "flags": [], "sample": "[edit]\nuser@R1# show | compare\n[edit interfaces ge-0/0/0 unit 0 family inet]\n+     address 10.1.1.1/24;", "annotations": [{"field": "+", "note": "Added lines"}, {"field": "-", "note": "Removed lines"}], "when": "Every change window before commit.", "whenNot": "Empty compare = nothing to commit.", "safety": "safe", "related": ["junos-commit"], "tags": ["commit", "audit"], "equivalents": {"cisco": "show archive config differences", "paloalto": "show config diff"}, "sandboxOutput": "[edit]\nuser@R1# show | compare\n[edit interfaces ge-0/0/0 unit 0 family inet]\n+     address 10.1.1.1/24;"}, {"id": "junos-sh-lldp", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "show lldp neighbors", "aliases": [], "purpose": "Lists LLDP neighbors for topology mapping.", "tokens": [{"t": "show lldp neighbors", "d": "LLDP adjacency table"}], "syntax": "show lldp neighbors", "flags": [], "sample": "Local Interface    Parent Interface    Chassis Id          Port Info          System Name\nge-0/0/1           -                   aa:bb:cc:00:02:00   ge-0/0/0           sw1", "annotations": [], "when": "Physical topology discovery.", "whenNot": "Requires protocols lldp enabled.", "safety": "safe", "related": ["junos-sh-int-terse"], "tags": ["discovery", "l2"], "equivalents": {"cisco": "show lldp neighbors", "paloalto": "show lldp neighbors all", "linux": "lldpctl"}, "sandboxOutput": "Local Interface    Parent Interface    Chassis Id          Port Info          System Name\nge-0/0/1           -                   aa:bb:cc:00:02:00   ge-0/0/0           sw1"}, {"id": "junos-sh-ospf-nei", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "show ospf neighbor", "aliases": [], "purpose": "OSPF neighbor states on Junos.", "tokens": [{"t": "show ospf neighbor", "d": "OSPF adjacencies"}], "syntax": "show ospf neighbor", "flags": [], "sample": "Address         Interface             State      ID               Pri  Dead\n10.1.1.2        ge-0/0/0.0            Full      2.2.2.2           128   36", "annotations": [{"field": "State", "note": "Full = adjacency complete"}], "when": "Verify OSPF after interface/area changes.", "whenNot": "Check show ospf interface / show ospf database for deeper issues.", "safety": "safe", "related": ["junos-sh-route"], "tags": ["ospf", "routing"], "equivalents": {"cisco": "show ip ospf neighbor", "paloalto": "show routing protocol ospf neighbor"}, "sandboxOutput": "Address         Interface             State      ID               Pri  Dead\n10.1.1.2        ge-0/0/0.0            Full      2.2.2.2           128   36"}, {"id": "junos-firewall", "vendor": "juniper", "family": "Junos", "mode": "config", "cmd": "set firewall family inet filter", "aliases": [], "purpose": "Creates a Junos firewall filter (ACL-like) with term-based match/action.", "tokens": [{"t": "firewall", "d": "Filter feature"}, {"t": "family inet", "d": "IPv4"}, {"t": "filter", "d": "Named filter"}, {"t": "term", "d": "Ordered rule"}], "syntax": "set firewall family inet filter <NAME> term <TERM> from <match>\nset firewall family inet filter <NAME> term <TERM> then <action>", "flags": [], "sample": "set firewall family inet filter PROTECT term BLOCK_SSH from protocol tcp\nset firewall family inet filter PROTECT term BLOCK_SSH from destination-port 22\nset firewall family inet filter PROTECT term BLOCK_SSH then discard\nset firewall family inet filter PROTECT term ACCEPT then accept", "annotations": [{"field": "term order", "note": "First match wins like ACL sequence"}], "when": "Transit or lo0 protection filters.", "whenNot": "Must apply filter to interface input/output.", "safety": "danger", "related": ["junos-commit"], "tags": ["acl", "security"], "equivalents": {"cisco": "ip access-list extended", "paloalto": "security rules", "linux": "nft/iptables"}, "sandboxOutput": "set firewall family inet filter PROTECT term BLOCK_SSH from protocol tcp\nset firewall family inet filter PROTECT term BLOCK_SSH from destination-port 22\nset firewall family inet filter PROTECT term BLOCK_SSH then discard\nset firewall family inet filter PROTECT term ACCEPT then accept"}, {"id": "junos-vlans", "vendor": "juniper", "family": "Junos", "mode": "config", "cmd": "set vlans", "aliases": [], "purpose": "Defines a named VLAN and VLAN-ID in the Ethernet switching hierarchy.", "tokens": [{"t": "set vlans", "d": "VLAN object"}, {"t": "vlan-id", "d": "802.1Q ID"}], "syntax": "set vlans <NAME> vlan-id <id>", "flags": [], "sample": "set vlans USERS vlan-id 10\nset interfaces ge-0/0/5 unit 0 family ethernet-switching vlan members USERS", "annotations": [], "when": "EX/QFX switching configs.", "whenNot": "Routing platforms may use different L2 models (bridge-domains).", "safety": "caution", "related": ["junos-commit"], "tags": ["vlan", "l2"], "equivalents": {"cisco": "vlan 10 / switchport access vlan 10"}, "sandboxOutput": "set vlans USERS vlan-id 10\nset interfaces ge-0/0/5 unit 0 family ethernet-switching vlan members USERS"}, {"id": "junos-sh-config", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "show configuration", "aliases": ["show config"], "purpose": "Displays committed configuration (use | display set for set-style).", "tokens": [{"t": "show configuration", "d": "Active config tree"}], "syntax": "show configuration [| display set]", "flags": [{"f": "| display set", "d": "Show as set commands \u2014 great for automation"}], "sample": "## Last changed: 2026-07-01 10:22:01 UTC\nversion 21.4R3;\nsystem {\n    host-name R1;\n}", "annotations": [], "when": "Audit and export config; display set feeds Netmiko.", "whenNot": "Huge configs \u2014 pipe/filter.", "safety": "safe", "related": ["junos-compare"], "tags": ["config", "audit", "automation"], "equivalents": {"cisco": "show running-config", "paloalto": "show config running"}, "sandboxOutput": "## Last changed: 2026-07-01 10:22:01 UTC\nversion 21.4R3;\nsystem {\n    host-name R1;\n}"}, {"id": "junos-ping", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "ping", "aliases": [], "purpose": "ICMP reachability test from the Junos device.", "tokens": [{"t": "ping", "d": "ICMP echo"}, {"t": "rapid", "d": "Faster flood ping"}], "syntax": "ping <host> [rapid] [source <addr>] [routing-instance <ri>]", "flags": [], "sample": "PING 8.8.8.8 : 56 data bytes\n64 bytes from 8.8.8.8: icmp_seq=0 ttl=117 time=14.2 ms\n--- 8.8.8.8 ping statistics ---\n5 packets transmitted, 5 packets received, 0% packet loss", "annotations": [], "when": "Connectivity checks; use source for correct VRF/interface.", "whenNot": "Does not test TCP apps.", "safety": "safe", "related": ["junos-sh-route"], "tags": ["troubleshooting", "icmp"], "equivalents": {"cisco": "ping", "linux": "ping", "powershell": "Test-Connection"}, "sandboxOutput": "PING 8.8.8.8 : 56 data bytes\n64 bytes from 8.8.8.8: icmp_seq=0 ttl=117 time=14.2 ms\n--- 8.8.8.8 ping statistics ---\n5 packets transmitted, 5 packets received, 0% packet loss"}, {"id": "junos-sh-arp", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "show arp", "aliases": [], "purpose": "ARP table on Junos.", "tokens": [{"t": "show arp", "d": "IP-to-MAC cache"}], "syntax": "show arp", "flags": [], "sample": "MAC Address       Address         Name                      Interface           Flags\naa:bb:cc:00:02:00 10.1.1.2        10.1.1.2                  ge-0/0/0.0          none", "annotations": [], "when": "L2 resolution checks.", "whenNot": "Empty for remote subnets (expected).", "safety": "safe", "related": ["junos-ping"], "tags": ["arp", "l2"], "equivalents": {"cisco": "show ip arp", "linux": "ip neigh", "powershell": "Get-NetNeighbor"}, "sandboxOutput": "MAC Address       Address         Name                      Interface           Flags\naa:bb:cc:00:02:00 10.1.1.2        10.1.1.2                  ge-0/0/0.0          none"}, {"id": "junos-static", "vendor": "juniper", "family": "Junos", "mode": "config", "cmd": "set routing-options static route", "aliases": [], "purpose": "Adds a static route in the candidate config.", "tokens": [{"t": "routing-options", "d": "RIB options"}, {"t": "static route", "d": "Static prefix"}, {"t": "next-hop", "d": "Where to send"}], "syntax": "set routing-options static route <prefix> next-hop <nh>", "flags": [], "sample": "set routing-options static route 0.0.0.0/0 next-hop 10.1.1.254", "annotations": [], "when": "Default route or stub networks.", "whenNot": "Needs commit; next-hop must be reachable.", "safety": "caution", "related": ["junos-commit", "junos-sh-route"], "tags": ["routing", "static"], "equivalents": {"cisco": "ip route 0.0.0.0 0.0.0.0 10.1.1.254", "linux": "ip route add", "powershell": "New-NetRoute"}, "sandboxOutput": "set routing-options static route 0.0.0.0/0 next-hop 10.1.1.254"}, {"id": "pan-sh-int-all", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "show interface all", "aliases": [], "purpose": "Lists all firewall interfaces with zone, IP, and link status \u2014 primary health view on PAN-OS.", "tokens": [{"t": "show", "d": "Operational"}, {"t": "interface", "d": "IF view"}, {"t": "all", "d": "Every interface"}], "syntax": "show interface all", "flags": [], "sample": "total configured hardware interfaces: 4\nname       id    speed/duplex/state        zone        vsys  ip\nethernet1/1 16   1000/full/up              trust       vsys1 10.1.1.1/24\nethernet1/2 17   1000/full/up              untrust     vsys1 203.0.113.5/30\nvlan.10     20   [n/a]/[n/a]/up           users       vsys1 10.10.10.1/24", "annotations": [{"field": "zone", "note": "Security zone \u2014 policy is zone-based"}, {"field": "state", "note": "up/down link"}], "when": "First command after login on Palo Alto.", "whenNot": "Does not show policy hits \u2014 use show session / ACC.", "safety": "safe", "related": ["pan-sh-routing", "pan-sh-session"], "tags": ["interfaces", "zones", "beginner"], "equivalents": {"cisco": "show ip interface brief", "juniper": "show interfaces terse", "linux": "ip -br addr", "powershell": "Get-NetIPAddress"}, "sandboxOutput": "total configured hardware interfaces: 4\nname       id    speed/duplex/state        zone        vsys  ip\nethernet1/1 16   1000/full/up              trust       vsys1 10.1.1.1/24\nethernet1/2 17   1000/full/up              untrust     vsys1 203.0.113.5/30\nvlan.10     20   [n/a]/[n/a]/up           users       vsys1 10.10.10.1/24"}, {"id": "pan-sh-routing", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "show routing route", "aliases": [], "purpose": "Displays the forwarding/routing table used by the firewall.", "tokens": [{"t": "show routing route", "d": "FIB/RIB view"}], "syntax": "show routing route", "flags": [], "sample": "flags: A:active ?:loose C:connected I:internal S:static O:ospf\ndestination         nexthop          metric flags  age      interface\n0.0.0.0/0           203.0.113.6      10     A S    83921    ethernet1/2\n10.1.1.0/24         10.1.1.1         0      A C    83921    ethernet1/1", "annotations": [{"field": "flags A", "note": "Active route"}, {"field": "S/C/O", "note": "Static/Connected/OSPF"}], "when": "Verify default route and internal prefixes.", "whenNot": "Virtual routers may differ \u2014 specify VR if multi-VR.", "safety": "safe", "related": ["pan-sh-int-all"], "tags": ["routing"], "equivalents": {"cisco": "show ip route", "juniper": "show route", "linux": "ip route", "powershell": "Get-NetRoute"}, "sandboxOutput": "flags: A:active ?:loose C:connected I:internal S:static O:ospf\ndestination         nexthop          metric flags  age      interface\n0.0.0.0/0           203.0.113.6      10     A S    83921    ethernet1/2\n10.1.1.0/24         10.1.1.1         0      A C    83921    ethernet1/1"}, {"id": "pan-sh-session", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "show session info", "aliases": [], "purpose": "High-level session table statistics \u2014 how many sessions, CPS, throughput.", "tokens": [{"t": "show session info", "d": "Session engine summary"}], "syntax": "show session info", "flags": [], "sample": "Number of sessions supported:                   262142\nNumber of active sessions:                      1842\nNumber of active TCP sessions:                  1201\nPacket rate:                                    1523/s\nThroughput:                                     45000 kbps\nNew connection establish rate:                  42 cps", "annotations": [{"field": "active sessions", "note": "Current flows in session table"}, {"field": "cps", "note": "Connections per second"}], "when": "Capacity and health check under load.", "whenNot": "Not a per-flow view \u2014 use show session all filter ...", "safety": "safe", "related": ["pan-sh-session-all"], "tags": ["sessions", "firewall", "performance"], "equivalents": {"cisco": "show ip cache flow / ASA show conn", "juniper": "show security flow session"}, "sandboxOutput": "Number of sessions supported:                   262142\nNumber of active sessions:                      1842\nNumber of active TCP sessions:                  1201\nPacket rate:                                    1523/s\nThroughput:                                     45000 kbps\nNew connection establish rate:                  42 cps"}, {"id": "pan-sh-session-all", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "show session all", "aliases": [], "purpose": "Lists active sessions; filter by source/dest/zone/application for troubleshooting.", "tokens": [{"t": "show session all", "d": "Session table dump"}, {"t": "filter", "d": "Narrow results"}], "syntax": "show session all filter source <ip> destination <ip>", "flags": [], "sample": "id application  state   type   src           dst           proto  zone\n42193 ssl         ACTIVE  FLOW   10.1.1.50     93.184.216.34 tcp    trust->untrust", "annotations": [{"field": "state", "note": "ACTIVE means allowed and flowing"}, {"field": "zone", "note": "Ingress->egress zone pair"}], "when": "Prove traffic is hitting the firewall and which app was identified.", "whenNot": "Huge output \u2014 always filter.", "safety": "safe", "related": ["pan-sh-session", "pan-test-security"], "tags": ["sessions", "troubleshooting"], "equivalents": {"cisco": "show access-lists / ASA show conn", "juniper": "show security flow session"}, "sandboxOutput": "id application  state   type   src           dst           proto  zone\n42193 ssl         ACTIVE  FLOW   10.1.1.50     93.184.216.34 tcp    trust->untrust"}, {"id": "pan-configure", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "configure", "aliases": [], "purpose": "Enters configuration mode. Like Junos, changes need commit to activate.", "tokens": [{"t": "configure", "d": "Enter config mode"}], "syntax": "configure", "flags": [], "sample": "admin@PA-VM> configure\nEntering configuration mode\n[edit]\nadmin@PA-VM#", "annotations": [{"field": "[edit]", "note": "Candidate config hierarchy"}], "when": "Any PAN-OS configuration change.", "whenNot": "Uncommitted changes are lost on reboot unless committed.", "safety": "caution", "related": ["pan-commit", "pan-set"], "tags": ["config", "modes", "commit-model"], "equivalents": {"cisco": "configure terminal", "juniper": "configure"}, "sandboxOutput": "admin@PA-VM> configure\nEntering configuration mode\n[edit]\nadmin@PA-VM#"}, {"id": "pan-set", "vendor": "paloalto", "family": "PAN-OS", "mode": "config", "cmd": "set", "aliases": [], "purpose": "Sets a configuration node in the candidate config (set-style CLI).", "tokens": [{"t": "set", "d": "Modify hierarchy"}], "syntax": "set <path> <value>", "flags": [], "sample": "set network interface ethernet ethernet1/1 layer3 ip 10.1.1.1/24\nset zone trust network layer3 ethernet1/1\nset rulebase security rules ALLOW-WEB from trust to untrust application ssl action allow", "annotations": [], "when": "Build candidate changes.", "whenNot": "Must commit; validate zone attachments.", "safety": "caution", "related": ["pan-commit"], "tags": ["config"], "equivalents": {"cisco": "(config) commands", "juniper": "set ..."}, "sandboxOutput": "set network interface ethernet ethernet1/1 layer3 ip 10.1.1.1/24\nset zone trust network layer3 ethernet1/1\nset rulebase security rules ALLOW-WEB from trust to untrust application ssl action allow"}, {"id": "pan-commit", "vendor": "paloalto", "family": "PAN-OS", "mode": "config", "cmd": "commit", "aliases": [], "purpose": "Commits candidate configuration to become active on the firewall.", "tokens": [{"t": "commit", "d": "Activate candidate"}], "syntax": "commit\ncommit force  (use carefully)", "flags": [], "sample": "admin@PA-VM# commit\nCommit job 14 is in progress........\nConfiguration committed successfully", "annotations": [{"field": "job", "note": "Commit is asynchronous job"}], "when": "After reviewing show config diff.", "whenNot": "Failed commits leave partial state messaging \u2014 read errors carefully.", "safety": "caution", "related": ["pan-configure", "pan-show-diff"], "tags": ["commit", "config"], "equivalents": {"cisco": "write memory", "juniper": "commit"}, "sandboxOutput": "admin@PA-VM# commit\nCommit job 14 is in progress........\nConfiguration committed successfully"}, {"id": "pan-show-diff", "vendor": "paloalto", "family": "PAN-OS", "mode": "config", "cmd": "show config diff", "aliases": [], "purpose": "Shows difference between candidate and running configuration.", "tokens": [{"t": "show config diff", "d": "Candidate vs running"}], "syntax": "show config diff", "flags": [], "sample": "+ zone {\n+   trust {\n+     network {\n+       layer3 ethernet1/1;\n+     }\n+   }\n+ }", "annotations": [], "when": "Pre-commit review.", "whenNot": "Empty = nothing pending.", "safety": "safe", "related": ["pan-commit"], "tags": ["audit", "commit"], "equivalents": {"juniper": "show | compare", "cisco": "show archive config differences"}, "sandboxOutput": "+ zone {\n+   trust {\n+     network {\n+       layer3 ethernet1/1;\n+     }\n+   }\n+ }"}, {"id": "pan-security-policy", "vendor": "paloalto", "family": "PAN-OS", "mode": "config", "cmd": "set rulebase security rules", "aliases": [], "purpose": "Creates a security policy rule \u2014 the core allow/deny logic on PAN-OS (zone-based).", "tokens": [{"t": "rulebase security rules", "d": "Security policy"}, {"t": "from/to", "d": "Source/dest zones"}, {"t": "action", "d": "allow/deny/drop"}], "syntax": "set rulebase security rules <NAME> from <src-zone> to <dst-zone> source <ip> destination <ip> application <app> service <svc> action <act>", "flags": [], "sample": "set rulebase security rules ALLOW-WEB from trust to untrust source any destination any application ssl service application-default action allow\nset rulebase security rules ALLOW-WEB log-end yes", "annotations": [{"field": "application-default", "note": "Uses app's standard ports \u2014 safer than any"}, {"field": "zones", "note": "Policy is zone-centric, not interface-ACL"}], "when": "Allow or block traffic between zones.", "whenNot": "Rule order matters; shadow rules cause outages.", "safety": "danger", "related": ["pan-test-security", "pan-commit"], "tags": ["security", "policy", "firewall"], "equivalents": {"cisco": "ip access-list + apply", "juniper": "security policies / filters", "linux": "nftables", "powershell": "New-NetFirewallRule"}, "sandboxOutput": "set rulebase security rules ALLOW-WEB from trust to untrust source any destination any application ssl service application-default action allow\nset rulebase security rules ALLOW-WEB log-end yes"}, {"id": "pan-nat-rule", "vendor": "paloalto", "family": "PAN-OS", "mode": "config", "cmd": "set rulebase nat rules", "aliases": [], "purpose": "Defines source/destination NAT rules used with security policy.", "tokens": [{"t": "rulebase nat rules", "d": "NAT policy"}], "syntax": "set rulebase nat rules <NAME> from <zone> to <zone> source <ip> destination <ip> service <svc> source-translation ...", "flags": [], "sample": "set rulebase nat rules PAT-OUT from trust to untrust source any destination any service any\nset rulebase nat rules PAT-OUT source-translation dynamic-ip-and-port interface-address interface ethernet1/2", "annotations": [], "when": "Internet egress PAT and inbound DNAT/port forwards.", "whenNot": "NAT + security policy both required for success.", "safety": "caution", "related": ["pan-commit", "pan-sh-routing"], "tags": ["nat", "firewall"], "equivalents": {"cisco": "ip nat inside source", "juniper": "security nat", "linux": "iptables -t nat"}, "sandboxOutput": "set rulebase nat rules PAT-OUT from trust to untrust source any destination any service any\nset rulebase nat rules PAT-OUT source-translation dynamic-ip-and-port interface-address interface ethernet1/2"}, {"id": "pan-test-security", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "test security-policy-match", "aliases": [], "purpose": "Simulates whether a flow would match a security rule \u2014 invaluable before/after changes.", "tokens": [{"t": "test security-policy-match", "d": "Policy simulator"}], "syntax": "test security-policy-match from <z> to <z> source <ip> destination <ip> protocol <n> destination-port <p>", "flags": [], "sample": "admin@PA-VM> test security-policy-match from trust to untrust source 10.1.1.50 destination 93.184.216.34 protocol 6 destination-port 443\n\"ALLOW-WEB\" {\n  from trust;\n  source any;\n  to untrust;\n  action allow;\n}", "annotations": [], "when": "Validate policy design without generating live traffic.", "whenNot": "Does not test NAT or routing by itself.", "safety": "safe", "related": ["pan-security-policy"], "tags": ["policy", "troubleshooting", "lab"], "equivalents": {"cisco": "packet-tracer (ASA)", "juniper": "test security policies"}, "sandboxOutput": "admin@PA-VM> test security-policy-match from trust to untrust source 10.1.1.50 destination 93.184.216.34 protocol 6 destination-port 443\n\"ALLOW-WEB\" {\n  from trust;\n  source any;\n  to untrust;\n  action allow;\n}"}, {"id": "pan-sh-system-info", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "show system info", "aliases": [], "purpose": "Hostname, model, serial, PAN-OS version, uptime \u2014 inventory essentials.", "tokens": [{"t": "show system info", "d": "Device identity"}], "syntax": "show system info", "flags": [], "sample": "hostname: PA-VM\nip-address: 192.168.1.20\nmodel: PA-VM\nserial: 0123456789\nsw-version: 10.2.4\nuptime: 15 days", "annotations": [], "when": "Asset inventory and version checks.", "whenNot": "Not for traffic troubleshooting.", "safety": "safe", "related": [], "tags": ["inventory", "beginner"], "equivalents": {"cisco": "show version", "juniper": "show version", "linux": "uname -a", "powershell": "Get-ComputerInfo"}, "sandboxOutput": "hostname: PA-VM\nip-address: 192.168.1.20\nmodel: PA-VM\nserial: 0123456789\nsw-version: 10.2.4\nuptime: 15 days"}, {"id": "pan-ping", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "ping host", "aliases": [], "purpose": "Ping from the firewall management or selected source.", "tokens": [{"t": "ping host", "d": "ICMP to destination"}], "syntax": "ping host <ip> [source <ip>]", "flags": [], "sample": "PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.\n64 bytes from 8.8.8.8: icmp_seq=1 ttl=117 time=14.1 ms", "annotations": [], "when": "Connectivity from firewall perspective.", "whenNot": "Mgmt vs dataplane source matters \u2014 specify source.", "safety": "safe", "related": ["pan-sh-routing"], "tags": ["troubleshooting", "icmp"], "equivalents": {"cisco": "ping", "juniper": "ping", "linux": "ping", "powershell": "Test-Connection"}, "sandboxOutput": "PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.\n64 bytes from 8.8.8.8: icmp_seq=1 ttl=117 time=14.1 ms"}, {"id": "pan-zones", "vendor": "paloalto", "family": "PAN-OS", "mode": "config", "cmd": "set zone", "aliases": [], "purpose": "Creates a security zone and attaches Layer-3 interfaces \u2014 foundation of PAN-OS policy.", "tokens": [{"t": "set zone", "d": "Zone object"}, {"t": "network layer3", "d": "Attach L3 IF"}], "syntax": "set zone <NAME> network layer3 <interface>", "flags": [], "sample": "set zone trust network layer3 [ ethernet1/1 vlan.10 ]\nset zone untrust network layer3 ethernet1/2", "annotations": [{"field": "zone", "note": "Logical trust boundary for policy"}], "when": "Before writing security rules.", "whenNot": "Interface must exist and be L3 mode.", "safety": "caution", "related": ["pan-security-policy", "pan-commit"], "tags": ["zones", "security", "beginner"], "equivalents": {"cisco": "interface + ACL mental model", "juniper": "security zones"}, "sandboxOutput": "set zone trust network layer3 [ ethernet1/1 vlan.10 ]\nset zone untrust network layer3 ethernet1/2"}, {"id": "pan-lldp", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "show lldp neighbors all", "aliases": [], "purpose": "LLDP neighbors visible to the firewall.", "tokens": [{"t": "show lldp neighbors all", "d": "LLDP table"}], "syntax": "show lldp neighbors all", "flags": [], "sample": "Interface     Chassis Type   Chassis ID         Port ID        System Name\nethernet1/1   MAC address    aa:bb:cc:00:01:00  Gi0/1          core-sw", "annotations": [], "when": "Cable / topology verification.", "whenNot": "LLDP must be enabled.", "safety": "safe", "related": ["pan-sh-int-all"], "tags": ["discovery", "l2"], "equivalents": {"cisco": "show lldp neighbors", "juniper": "show lldp neighbors", "linux": "lldpctl"}, "sandboxOutput": "Interface     Chassis Type   Chassis ID         Port ID        System Name\nethernet1/1   MAC address    aa:bb:cc:00:01:00  Gi0/1          core-sw"}, {"id": "linux-ip-addr", "vendor": "linux", "family": "Bash/iproute2", "mode": "shell", "cmd": "ip addr", "aliases": ["ip a", "ifconfig"], "purpose": "Shows interfaces and IPv4/IPv6 addresses \u2014 primary Linux host IP view.", "tokens": [{"t": "ip", "d": "iproute2 tool"}, {"t": "addr", "d": "Address objects"}], "syntax": "ip addr [show dev <if>]\nip -br addr", "flags": [{"f": "-br", "d": "Brief table"}, {"f": "dev", "d": "Single interface"}], "sample": "1: lo: <LOOPBACK,UP> mtu 65536\n    inet 127.0.0.1/8\n2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500\n    inet 10.1.1.50/24 brd 10.1.1.255 scope global eth0", "annotations": [{"field": "LOWER_UP", "note": "Carrier detected"}, {"field": "/24", "note": "Prefix length"}], "when": "Check host addressing before blaming the network.", "whenNot": "Legacy ifconfig may be missing on modern distros.", "safety": "safe", "related": ["linux-ip-route", "linux-ip-link"], "tags": ["interfaces", "host", "beginner"], "equivalents": {"cisco": "show ip interface brief", "juniper": "show interfaces terse", "paloalto": "show interface all", "powershell": "Get-NetIPAddress"}, "sandboxOutput": "1: lo: <LOOPBACK,UP> mtu 65536\n    inet 127.0.0.1/8\n2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500\n    inet 10.1.1.50/24 brd 10.1.1.255 scope global eth0"}, {"id": "linux-ip-link", "vendor": "linux", "family": "Bash/iproute2", "mode": "shell", "cmd": "ip link", "aliases": ["ip l"], "purpose": "Shows Layer-2 link state, MAC, MTU, and admin flags.", "tokens": [{"t": "ip link", "d": "Link-layer interfaces"}], "syntax": "ip link show\nip link set dev <if> up|down", "flags": [], "sample": "2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT\n    link/ether aa:bb:cc:11:22:33 brd ff:ff:ff:ff:ff:ff", "annotations": [{"field": "state UP", "note": "Admin + carrier"}, {"field": "mtu", "note": "Max frame payload"}], "when": "L1/L2 host checks; bring interfaces up/down.", "whenNot": "Setting down kills connectivity \u2014 caution on remotes.", "safety": "caution", "related": ["linux-ip-addr", "linux-ethtool"], "tags": ["interfaces", "l2"], "equivalents": {"cisco": "show interfaces", "powershell": "Get-NetAdapter"}, "sandboxOutput": "2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT\n    link/ether aa:bb:cc:11:22:33 brd ff:ff:ff:ff:ff:ff"}, {"id": "linux-ip-route", "vendor": "linux", "family": "Bash/iproute2", "mode": "shell", "cmd": "ip route", "aliases": ["ip r", "route -n"], "purpose": "Displays the kernel routing table used for forwarding packets from this host.", "tokens": [{"t": "ip route", "d": "IPv4 routes"}], "syntax": "ip route\nip route get <dest>", "flags": [{"f": "get", "d": "Kernel's choice for a destination"}], "sample": "default via 10.1.1.1 dev eth0 proto dhcp metric 100\n10.1.1.0/24 dev eth0 proto kernel scope link src 10.1.1.50", "annotations": [{"field": "default via", "note": "Gateway"}, {"field": "ip route get", "note": "Best for 'which path would this take?'"}], "when": "Verify default gateway and on-link routes.", "whenNot": "Policy routing (multiple tables) needs ip rule.", "safety": "safe", "related": ["linux-ip-addr", "linux-ping"], "tags": ["routing", "host"], "equivalents": {"cisco": "show ip route", "juniper": "show route", "paloalto": "show routing route", "powershell": "Get-NetRoute"}, "sandboxOutput": "default via 10.1.1.1 dev eth0 proto dhcp metric 100\n10.1.1.0/24 dev eth0 proto kernel scope link src 10.1.1.50"}, {"id": "linux-ss", "vendor": "linux", "family": "Bash/iproute2", "mode": "shell", "cmd": "ss", "aliases": ["netstat -tulpn"], "purpose": "Socket statistics \u2014 which ports are listening and established connections (modern netstat).", "tokens": [{"t": "ss", "d": "Socket stats"}, {"t": "-tulpn", "d": "TCP/UDP listening with process"}], "syntax": "ss -tulpn\nss -tan", "flags": [{"f": "-t", "d": "TCP"}, {"f": "-u", "d": "UDP"}, {"f": "-l", "d": "Listening"}, {"f": "-p", "d": "Process"}, {"f": "-n", "d": "Numeric"}], "sample": "State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\nLISTEN 0      128    0.0.0.0:22           0.0.0.0:*          users:((\"sshd\",pid=812))\nESTAB  0      0      10.1.1.50:22         10.1.1.100:53122   users:((\"sshd\",pid=2201))", "annotations": [{"field": "LISTEN", "note": "Service accepting connections"}, {"field": "Process", "note": "Which binary owns the socket"}], "when": "Confirm service is bound; find who uses a port.", "whenNot": "Needs root/capabilities for some -p details.", "safety": "safe", "related": ["linux-ping"], "tags": ["sockets", "host", "troubleshooting"], "equivalents": {"powershell": "Get-NetTCPConnection", "cisco": "show control-plane host open-ports"}, "sandboxOutput": "State  Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process\nLISTEN 0      128    0.0.0.0:22           0.0.0.0:*          users:((\"sshd\",pid=812))\nESTAB  0      0      10.1.1.50:22         10.1.1.100:53122   users:((\"sshd\",pid=2201))"}, {"id": "linux-ping", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "ping", "aliases": [], "purpose": "ICMP echo to test reachability from the Linux host.", "tokens": [{"t": "ping", "d": "ICMP"}, {"t": "-c", "d": "Count"}, {"t": "-I", "d": "Source interface/IP"}], "syntax": "ping -c 4 <host>\nping -c 4 -I eth0 <host>", "flags": [], "sample": "PING 10.1.1.1 (10.1.1.1) 56(84) bytes of data.\n64 bytes from 10.1.1.1: icmp_seq=1 ttl=64 time=0.4 ms\n--- 10.1.1.1 ping statistics ---\n4 packets transmitted, 4 received, 0% packet loss", "annotations": [], "when": "First host-side connectivity test.", "whenNot": "Blocked ICMP \u2260 blocked TCP.", "safety": "safe", "related": ["linux-traceroute", "linux-ip-route"], "tags": ["icmp", "troubleshooting", "beginner"], "equivalents": {"cisco": "ping", "juniper": "ping", "paloalto": "ping host", "powershell": "Test-Connection"}, "sandboxOutput": "PING 10.1.1.1 (10.1.1.1) 56(84) bytes of data.\n64 bytes from 10.1.1.1: icmp_seq=1 ttl=64 time=0.4 ms\n--- 10.1.1.1 ping statistics ---\n4 packets transmitted, 4 received, 0% packet loss"}, {"id": "linux-traceroute", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "traceroute", "aliases": ["tracepath", "mtr"], "purpose": "Hop-by-hop path discovery from the host.", "tokens": [{"t": "traceroute", "d": "TTL path trace"}], "syntax": "traceroute <host>\nmtr -rw <host>", "flags": [], "sample": "traceroute to 8.8.8.8 (8.8.8.8), 30 hops max\n 1  10.1.1.1  0.4 ms\n 2  203.0.113.1  12 ms\n 3  8.8.8.8  14 ms", "annotations": [], "when": "Find where the path breaks.", "whenNot": "Install mtr for continuous view.", "safety": "safe", "related": ["linux-ping"], "tags": ["path", "troubleshooting"], "equivalents": {"cisco": "traceroute", "powershell": "Test-NetConnection -TraceRoute"}, "sandboxOutput": "traceroute to 8.8.8.8 (8.8.8.8), 30 hops max\n 1  10.1.1.1  0.4 ms\n 2  203.0.113.1  12 ms\n 3  8.8.8.8  14 ms"}, {"id": "linux-tcpdump", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "tcpdump", "aliases": [], "purpose": "Captures packets on an interface \u2014 the CLI cousin of Wireshark.", "tokens": [{"t": "tcpdump", "d": "Packet capture"}, {"t": "-i", "d": "Interface"}, {"t": "-n", "d": "No DNS resolve"}, {"t": "-c", "d": "Packet count"}], "syntax": "tcpdump -ni eth0 host 10.1.1.1 and port 53\ntcpdump -ni eth0 -w capture.pcap", "flags": [], "sample": "12:01:04.112 eth0  IP 10.1.1.50.53122 > 10.1.1.1.53: UDP, length 44\n12:01:04.113 eth0  IP 10.1.1.1.53 > 10.1.1.50.53122: UDP, length 88", "annotations": [{"field": "-w", "note": "Write pcap for Wireshark later"}], "when": "Prove packets arrive/leave; DNS/TCP handshake debugging.", "whenNot": "Needs privileges; can capture secrets \u2014 handle pcaps carefully.", "safety": "caution", "related": ["linux-ss"], "tags": ["capture", "troubleshooting"], "equivalents": {"cisco": "Embedded Packet Capture", "powershell": "pktmon / netsh trace", "juniper": "monitor traffic"}, "sandboxOutput": "12:01:04.112 eth0  IP 10.1.1.50.53122 > 10.1.1.1.53: UDP, length 44\n12:01:04.113 eth0  IP 10.1.1.1.53 > 10.1.1.50.53122: UDP, length 88"}, {"id": "linux-nmcli", "vendor": "linux", "family": "Bash/NetworkManager", "mode": "shell", "cmd": "nmcli", "aliases": [], "purpose": "NetworkManager CLI for connection profiles, Wi-Fi, and addressing on many desktops/servers.", "tokens": [{"t": "nmcli", "d": "NetworkManager CLI"}, {"t": "device", "d": "Device status"}, {"t": "connection", "d": "Profiles"}], "syntax": "nmcli device status\nnmcli connection show\nnmcli connection up <name>", "flags": [], "sample": "DEVICE  TYPE      STATE      CONNECTION\neth0    ethernet  connected  wired-prod\nlo      loopback  unmanaged  --", "annotations": [], "when": "Persistent host network config on NM systems.", "whenNot": "Not present on all servers (may use netplan/systemd-networkd).", "safety": "caution", "related": ["linux-ip-addr"], "tags": ["host", "config"], "equivalents": {"powershell": "Get-NetConnectionProfile / Set-NetIPAddress"}, "sandboxOutput": "DEVICE  TYPE      STATE      CONNECTION\neth0    ethernet  connected  wired-prod\nlo      loopback  unmanaged  --"}, {"id": "linux-ethtool", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "ethtool", "aliases": [], "purpose": "Queries NIC driver settings: link, speed, duplex, offloads.", "tokens": [{"t": "ethtool", "d": "NIC utility"}, {"t": "<if>", "d": "Interface"}], "syntax": "ethtool eth0\nethtool -S eth0", "flags": [], "sample": "Settings for eth0:\n  Speed: 1000Mb/s\n  Duplex: Full\n  Link detected: yes", "annotations": [{"field": "Speed/Duplex", "note": "Mismatch causes errors"}, {"field": "-S", "note": "Driver stats / drops"}], "when": "L1 NIC troubleshooting on Linux hosts.", "whenNot": "Some VMs report fake/limited data.", "safety": "safe", "related": ["linux-ip-link"], "tags": ["l1", "nic"], "equivalents": {"cisco": "show interfaces status", "powershell": "Get-NetAdapter"}, "sandboxOutput": "Settings for eth0:\n  Speed: 1000Mb/s\n  Duplex: Full\n  Link detected: yes"}, {"id": "linux-hosts", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "/etc/hosts", "aliases": ["cat /etc/hosts"], "purpose": "Static hostname-to-IP mappings consulted before/along with DNS (depending on nsswitch).", "tokens": [{"t": "/etc/hosts", "d": "Local name file"}], "syntax": "cat /etc/hosts\n# edit with root privileges", "flags": [], "sample": "127.0.0.1   localhost\n10.1.1.10   r1.lab.local r1\n10.1.1.20   pa.lab.local", "annotations": [], "when": "Lab name resolution without DNS; break-glass mapping.", "whenNot": "Stale entries cause confusing 'DNS' bugs.", "safety": "caution", "related": ["linux-ping"], "tags": ["dns", "host"], "equivalents": {"powershell": "C:\\Windows\\System32\\drivers\\etc\\hosts", "cisco": "ip host"}, "sandboxOutput": "127.0.0.1   localhost\n10.1.1.10   r1.lab.local r1\n10.1.1.20   pa.lab.local"}, {"id": "linux-ip-neigh", "vendor": "linux", "family": "Bash/iproute2", "mode": "shell", "cmd": "ip neigh", "aliases": ["ip n", "arp -n"], "purpose": "Neighbor table (ARP/NDP) \u2014 IP to MAC on local segments.", "tokens": [{"t": "ip neigh", "d": "Neighbor entries"}], "syntax": "ip neigh show\nip neigh flush dev eth0", "flags": [], "sample": "10.1.1.1 dev eth0 lladdr aa:bb:cc:00:01:00 REACHABLE\n10.1.1.99 dev eth0 INCOMPLETE", "annotations": [{"field": "REACHABLE", "note": "Healthy ARP"}, {"field": "INCOMPLETE", "note": "No reply yet"}], "when": "Debug gateway ARP failures.", "whenNot": "Flushing can briefly disrupt flows.", "safety": "caution", "related": ["linux-ping"], "tags": ["arp", "l2"], "equivalents": {"cisco": "show ip arp", "juniper": "show arp", "powershell": "Get-NetNeighbor"}, "sandboxOutput": "10.1.1.1 dev eth0 lladdr aa:bb:cc:00:01:00 REACHABLE\n10.1.1.99 dev eth0 INCOMPLETE"}, {"id": "linux-curl", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "curl", "aliases": [], "purpose": "HTTP(S) client \u2014 test application connectivity and headers from the host.", "tokens": [{"t": "curl", "d": "Transfer tool"}, {"t": "-v", "d": "Verbose"}, {"t": "-I", "d": "Headers only"}], "syntax": "curl -I https://example.com\ncurl -v telnet://10.1.1.10:22", "flags": [], "sample": "HTTP/2 200\ncontent-type: text/html\nserver: ECS", "annotations": [], "when": "Verify web/API path beyond ICMP.", "whenNot": "TLS errors may be local trust store issues.", "safety": "safe", "related": ["linux-ss"], "tags": ["app", "troubleshooting"], "equivalents": {"powershell": "Invoke-WebRequest", "cisco": "n/a"}, "sandboxOutput": "HTTP/2 200\ncontent-type: text/html\nserver: ECS"}, {"id": "linux-bridge-vlan", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "bridge vlan", "aliases": [], "purpose": "Shows VLAN filtering membership on Linux bridge ports (switchdev/bridge).", "tokens": [{"t": "bridge vlan", "d": "Bridge VLAN table"}], "syntax": "bridge vlan show", "flags": [], "sample": "port              vlan-id\neth1              1 PVID Egress Untagged\neth1              10\neth2              1 PVID Egress Untagged\neth2              20", "annotations": [], "when": "Linux switching / hypervisor VLAN checks.", "whenNot": "Only relevant when using vlan-aware bridges.", "safety": "safe", "related": ["linux-ip-link"], "tags": ["vlan", "l2"], "equivalents": {"cisco": "show vlan brief", "juniper": "show vlans"}, "sandboxOutput": "port              vlan-id\neth1              1 PVID Egress Untagged\neth1              10\neth2              1 PVID Egress Untagged\neth2              20"}, {"id": "ps-get-netip", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Get-NetIPAddress", "aliases": ["gip"], "purpose": "Lists IP addresses assigned to Windows adapters (IPv4/IPv6).", "tokens": [{"t": "Get-NetIPAddress", "d": "IP address objects"}], "syntax": "Get-NetIPAddress -AddressFamily IPv4\nGet-NetIPAddress -InterfaceAlias 'Ethernet'", "flags": [], "sample": "IPAddress         InterfaceAlias       AddressFamily PrefixOrigin\n10.1.1.50         Ethernet             IPv4          Manual\n127.0.0.1         Loopback Pseudo-     IPv4          WellKnown", "annotations": [{"field": "PrefixOrigin", "note": "Manual/DHCP/WellKnown"}], "when": "Windows host addressing check.", "whenNot": "Multiple adapters \u2014 filter by InterfaceAlias.", "safety": "safe", "related": ["ps-get-netadapter", "ps-get-netroute"], "tags": ["interfaces", "host", "beginner"], "equivalents": {"cisco": "show ip interface brief", "linux": "ip addr", "juniper": "show interfaces terse", "paloalto": "show interface all"}, "sandboxOutput": "IPAddress         InterfaceAlias       AddressFamily PrefixOrigin\n10.1.1.50         Ethernet             IPv4          Manual\n127.0.0.1         Loopback Pseudo-     IPv4          WellKnown"}, {"id": "ps-get-netroute", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Get-NetRoute", "aliases": [], "purpose": "Shows the Windows routing table.", "tokens": [{"t": "Get-NetRoute", "d": "Route entries"}], "syntax": "Get-NetRoute -AddressFamily IPv4\nGet-NetRoute -DestinationPrefix '0.0.0.0/0'", "flags": [], "sample": "DestinationPrefix  NextHop     RouteMetric  InterfaceAlias\n0.0.0.0/0          10.1.1.1    25           Ethernet\n10.1.1.0/24        0.0.0.0     256          Ethernet", "annotations": [{"field": "0.0.0.0/0", "note": "Default route"}, {"field": "NextHop 0.0.0.0", "note": "On-link"}], "when": "Verify default gateway on Windows.", "whenNot": "Metric conflicts with multi-homing cause asymmetric paths.", "safety": "safe", "related": ["ps-get-netip", "ps-tnc"], "tags": ["routing", "host"], "equivalents": {"cisco": "show ip route", "linux": "ip route", "juniper": "show route", "paloalto": "show routing route"}, "sandboxOutput": "DestinationPrefix  NextHop     RouteMetric  InterfaceAlias\n0.0.0.0/0          10.1.1.1    25           Ethernet\n10.1.1.0/24        0.0.0.0     256          Ethernet"}, {"id": "ps-tnc", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Test-NetConnection", "aliases": ["tnc"], "purpose": "PowerShell connectivity tester: ICMP, TCP port, optional traceroute.", "tokens": [{"t": "Test-NetConnection", "d": "Path/port test"}, {"t": "-Port", "d": "TCP port"}, {"t": "-TraceRoute", "d": "Path"}], "syntax": "Test-NetConnection 10.1.1.1\nTest-NetConnection example.com -Port 443\nTest-NetConnection 8.8.8.8 -TraceRoute", "flags": [], "sample": "ComputerName           : 10.1.1.1\nRemoteAddress          : 10.1.1.1\nPingSucceeded          : True\nTcpTestSucceeded       : True\nRemotePort             : 443", "annotations": [{"field": "TcpTestSucceeded", "note": "True = TCP handshake worked"}], "when": "Better than ping alone for app ports.", "whenNot": "Slower than ping; ICMP may be blocked while TCP works.", "safety": "safe", "related": ["ps-get-netroute"], "tags": ["troubleshooting", "tcp", "beginner"], "equivalents": {"linux": "curl/nc + ping", "cisco": "telnet <host> <port> / ping"}, "sandboxOutput": "ComputerName           : 10.1.1.1\nRemoteAddress          : 10.1.1.1\nPingSucceeded          : True\nTcpTestSucceeded       : True\nRemotePort             : 443"}, {"id": "ps-get-netadapter", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Get-NetAdapter", "aliases": [], "purpose": "Lists network adapters with status, MAC, link speed.", "tokens": [{"t": "Get-NetAdapter", "d": "NIC inventory"}], "syntax": "Get-NetAdapter\nGet-NetAdapter | Where-Object Status -eq 'Up'", "flags": [], "sample": "Name      InterfaceDescription                Status  MacAddress        LinkSpeed\nEthernet  Intel(R) Ethernet Connection        Up      AA-BB-CC-11-22-33 1 Gbps\nWi-Fi     Intel(R) Wi-Fi 6                    Disabled --               0 bps", "annotations": [{"field": "Status", "note": "Up/Disabled/Disconnected"}], "when": "Find which NIC is active.", "whenNot": "Disabled \u2260 unplugged.", "safety": "safe", "related": ["ps-get-netip", "ps-get-netadapterstats"], "tags": ["interfaces", "host"], "equivalents": {"linux": "ip link", "cisco": "show interfaces status"}, "sandboxOutput": "Name      InterfaceDescription                Status  MacAddress        LinkSpeed\nEthernet  Intel(R) Ethernet Connection        Up      AA-BB-CC-11-22-33 1 Gbps\nWi-Fi     Intel(R) Wi-Fi 6                    Disabled --               0 bps"}, {"id": "ps-get-netadapterstats", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Get-NetAdapterStatistics", "aliases": [], "purpose": "Per-adapter counters: bytes/packets sent/received and errors/discards.", "tokens": [{"t": "Get-NetAdapterStatistics", "d": "NIC counters"}], "syntax": "Get-NetAdapterStatistics -Name Ethernet", "flags": [], "sample": "Name     ReceivedBytes SentBytes ReceivedUnicastPackets OutboundDiscardedPackets\nEthernet 104857600     52428800  120431                 0", "annotations": [], "when": "Spot discards/errors on Windows NICs.", "whenNot": "Need baseline for 'is this growing?'", "safety": "safe", "related": ["ps-get-netadapter"], "tags": ["counters", "troubleshooting"], "equivalents": {"linux": "ip -s link", "cisco": "show interfaces"}, "sandboxOutput": "Name     ReceivedBytes SentBytes ReceivedUnicastPackets OutboundDiscardedPackets\nEthernet 104857600     52428800  120431                 0"}, {"id": "ps-resolve-dns", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Resolve-DnsName", "aliases": ["nslookup"], "purpose": "DNS query tool (A/AAAA/CNAME/MX/etc.).", "tokens": [{"t": "Resolve-DnsName", "d": "DNS lookup"}, {"t": "-Type", "d": "Record type"}], "syntax": "Resolve-DnsName example.com\nResolve-DnsName example.com -Type MX -Server 1.1.1.1", "flags": [], "sample": "Name        Type  TTL   Section  IPAddress\nexample.com A     300   Answer   93.184.216.34", "annotations": [], "when": "Validate name resolution path.", "whenNot": "Client cache may differ from authoritative \u2014 flush if needed.", "safety": "safe", "related": ["ps-tnc"], "tags": ["dns", "troubleshooting"], "equivalents": {"linux": "dig / getent hosts", "cisco": "ping with DNS"}, "sandboxOutput": "Name        Type  TTL   Section  IPAddress\nexample.com A     300   Answer   93.184.216.34"}, {"id": "ps-firewall-rule", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "New-NetFirewallRule", "aliases": ["Get-NetFirewallRule"], "purpose": "Creates or inspects Windows Defender Firewall rules.", "tokens": [{"t": "New-NetFirewallRule", "d": "Add rule"}, {"t": "Get-NetFirewallRule", "d": "List rules"}], "syntax": "New-NetFirewallRule -DisplayName 'Allow SSH' -Direction Inbound -Protocol TCP -LocalPort 22 -Action Allow\nGet-NetFirewallRule -DisplayName 'Allow SSH'", "flags": [], "sample": "Name                  : {guid}\nDisplayName           : Allow SSH\nDirection             : Inbound\nAction                : Allow\nEnabled               : True", "annotations": [], "when": "Open/block ports on Windows hosts.", "whenNot": "Wrong profile (Domain/Private/Public) = rule seems ignored.", "safety": "caution", "related": ["ps-tnc"], "tags": ["firewall", "security", "host"], "equivalents": {"linux": "nft/ufw", "cisco": "ACL", "paloalto": "security rules"}, "sandboxOutput": "Name                  : {guid}\nDisplayName           : Allow SSH\nDirection             : Inbound\nAction                : Allow\nEnabled               : True"}, {"id": "ps-get-netneighbor", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Get-NetNeighbor", "aliases": [], "purpose": "ARP/neighbor cache on Windows.", "tokens": [{"t": "Get-NetNeighbor", "d": "Neighbor entries"}], "syntax": "Get-NetNeighbor -AddressFamily IPv4 | Where-Object State -eq Reachable", "flags": [], "sample": "IPAddress  LinkLayerAddress   State      InterfaceAlias\n10.1.1.1   AA-BB-CC-00-01-00  Reachable  Ethernet", "annotations": [], "when": "Confirm gateway MAC learning.", "whenNot": "Incomplete/Unreachable indicates L2 issues.", "safety": "safe", "related": ["ps-get-netip"], "tags": ["arp", "l2"], "equivalents": {"linux": "ip neigh", "cisco": "show ip arp", "juniper": "show arp"}, "sandboxOutput": "IPAddress  LinkLayerAddress   State      InterfaceAlias\n10.1.1.1   AA-BB-CC-00-01-00  Reachable  Ethernet"}, {"id": "ps-new-netroute", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "New-NetRoute", "aliases": [], "purpose": "Adds a persistent static route on Windows.", "tokens": [{"t": "New-NetRoute", "d": "Create route"}], "syntax": "New-NetRoute -DestinationPrefix '192.168.50.0/24' -InterfaceAlias 'Ethernet' -NextHop 10.1.1.1", "flags": [], "sample": "DestinationPrefix  NextHop   RouteMetric  ifIndex\n192.168.50.0/24    10.1.1.1  256          12", "annotations": [], "when": "Reach remote subnets via specific gateway.", "whenNot": "Wrong InterfaceAlias blackholes traffic.", "safety": "caution", "related": ["ps-get-netroute"], "tags": ["routing", "config"], "equivalents": {"linux": "ip route add", "cisco": "ip route ...", "juniper": "set routing-options static route"}, "sandboxOutput": "DestinationPrefix  NextHop   RouteMetric  ifIndex\n192.168.50.0/24    10.1.1.1  256          12"}, {"id": "ps-test-connection", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Test-Connection", "aliases": ["ping"], "purpose": "PowerShell ping (ICMP) wrapper.", "tokens": [{"t": "Test-Connection", "d": "ICMP echo"}, {"t": "-Count", "d": "Number of probes"}], "syntax": "Test-Connection 10.1.1.1 -Count 4", "flags": [], "sample": "Source  Destination  IPV4Address  Bytes  Time(ms)\nPC1     10.1.1.1     10.1.1.1     32     1", "annotations": [], "when": "Simple reachability from Windows.", "whenNot": "Prefer Test-NetConnection for TCP apps.", "safety": "safe", "related": ["ps-tnc"], "tags": ["icmp", "beginner"], "equivalents": {"linux": "ping", "cisco": "ping"}, "sandboxOutput": "Source  Destination  IPV4Address  Bytes  Time(ms)\nPC1     10.1.1.1     10.1.1.1     32     1"}, {"id": "ps-get-dnsclient", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Get-DnsClientServerAddress", "aliases": [], "purpose": "Shows which DNS servers each adapter uses.", "tokens": [{"t": "Get-DnsClientServerAddress", "d": "DNS server list"}], "syntax": "Get-DnsClientServerAddress -AddressFamily IPv4", "flags": [], "sample": "InterfaceAlias  ServerAddresses\nEthernet        {10.1.1.10, 1.1.1.1}", "annotations": [], "when": "DNS misconfig root-cause checks.", "whenNot": "Per-adapter settings override.", "safety": "safe", "related": ["ps-resolve-dns"], "tags": ["dns", "host"], "equivalents": {"linux": "resolvectl status /cat /etc/resolv.conf"}, "sandboxOutput": "InterfaceAlias  ServerAddresses\nEthernet        {10.1.1.10, 1.1.1.1}"}, {"id": "ps-clear-dnscache", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Clear-DnsClientCache", "aliases": ["ipconfig /flushdns"], "purpose": "Flushes the local DNS resolver cache.", "tokens": [{"t": "Clear-DnsClientCache", "d": "Drop cached answers"}], "syntax": "Clear-DnsClientCache", "flags": [], "sample": "# No output on success \u2014 cache cleared", "annotations": [], "when": "After DNS record changes while testing.", "whenNot": "Does not fix wrong DNS server config.", "safety": "safe", "related": ["ps-resolve-dns"], "tags": ["dns", "troubleshooting"], "equivalents": {"linux": "resolvectl flush-caches", "cisco": "n/a"}, "sandboxOutput": "# No output on success \u2014 cache cleared"}, {"id": "cisco-sh-mac", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show mac address-table", "aliases": ["sh mac addr"], "purpose": "Displays the CAM/MAC table \u2014 which MAC learned on which switch port/VLAN.", "tokens": [{"t": "show", "d": "Display"}, {"t": "mac address-table", "d": "CAM table"}], "syntax": "show mac address-table [vlan <id>] [address <mac>]", "flags": [], "sample": "          Mac Address Table\nVlan    Mac Address       Type        Ports\n10      aabb.cc00.0500    DYNAMIC     Gi0/5\n10      aabb.cc00.0100    DYNAMIC     Gi0/1", "annotations": [{"field": "DYNAMIC", "note": "Learned from traffic"}, {"field": "Ports", "note": "Egress port for that MAC"}], "when": "Find which port a host is on.", "whenNot": "Routers may not keep a full L2 table like switches.", "safety": "safe", "related": ["cisco-sh-vlan"], "tags": ["mac", "l2", "switching"], "equivalents": {"juniper": "show ethernet-switching table", "linux": "bridge fdb"}, "sandboxOutput": "          Mac Address Table\nVlan    Mac Address       Type        Ports\n10      aabb.cc00.0500    DYNAMIC     Gi0/5\n10      aabb.cc00.0100    DYNAMIC     Gi0/1"}, {"id": "cisco-sh-spanning", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show spanning-tree", "aliases": ["sh span"], "purpose": "Shows STP/RSTP state per VLAN: root bridge, port roles, and blocking ports.", "tokens": [{"t": "show spanning-tree", "d": "STP status"}], "syntax": "show spanning-tree [vlan <id>]", "flags": [], "sample": "VLAN0010\n  Root ID    Priority    32778\n             Address     aabb.cc00.0001\n  This bridge is the root\nInterface           Role Sts Cost      Prio.Nbr Type\nGi0/1               Desg FWD 4         128.1    P2p\nGi0/5               Desg FWD 4         128.5    P2p", "annotations": [{"field": "BLK/FWD", "note": "Blocking vs forwarding"}, {"field": "Root ID", "note": "Who is root bridge"}], "when": "Troubleshoot loops and unexpected blocked uplinks.", "whenNot": "Rapid-PVST vs MST views differ.", "safety": "safe", "related": ["cisco-sh-int-trunk"], "tags": ["stp", "l2"], "equivalents": {"juniper": "show spanning-tree bridge"}, "sandboxOutput": "VLAN0010\n  Root ID    Priority    32778\n             Address     aabb.cc00.0001\n  This bridge is the root\nInterface           Role Sts Cost      Prio.Nbr Type\nGi0/1               Desg FWD 4         128.1    P2p\nGi0/5               Desg FWD 4         128.5    P2p"}, {"id": "cisco-sh-ver", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show version", "aliases": ["sh ver"], "purpose": "Software version, uptime, hardware, config-register, and reload reason.", "tokens": [{"t": "show version", "d": "Device identity"}], "syntax": "show version", "flags": [], "sample": "Cisco IOS XE Software, Version 17.09.01\nuptime is 12 weeks, 3 days\nSystem image file is \"bootflash:packages.conf\"\ncisco ISR4331/K9", "annotations": [], "when": "Inventory and upgrade planning.", "whenNot": "Not for traffic path issues.", "safety": "safe", "related": [], "tags": ["inventory", "beginner"], "equivalents": {"juniper": "show version", "paloalto": "show system info", "linux": "uname -a", "powershell": "Get-ComputerInfo"}, "sandboxOutput": "Cisco IOS XE Software, Version 17.09.01\nuptime is 12 weeks, 3 days\nSystem image file is \"bootflash:packages.conf\"\ncisco ISR4331/K9"}, {"id": "cisco-ip-route-static", "vendor": "cisco", "family": "IOS/XE", "mode": "config", "cmd": "ip route", "aliases": [], "purpose": "Installs a static IPv4 route in the RIB.", "tokens": [{"t": "ip route", "d": "Static route"}, {"t": "<prefix> <mask>", "d": "Destination"}, {"t": "<nh>", "d": "Next-hop or interface"}], "syntax": "ip route <network> <mask> <next-hop> [<ad>]", "flags": [], "sample": "R1(config)# ip route 0.0.0.0 0.0.0.0 10.1.1.254\nR1(config)# ip route 192.168.50.0 255.255.255.0 10.1.1.2", "annotations": [], "when": "Default route or stub networks.", "whenNot": "Recursive next-hop must resolve.", "safety": "caution", "related": ["cisco-sh-ip-route"], "tags": ["static", "routing", "config"], "equivalents": {"juniper": "set routing-options static route", "linux": "ip route add", "powershell": "New-NetRoute", "paloalto": "set network virtual-router default routing-table ip static-route"}, "sandboxOutput": "R1(config)# ip route 0.0.0.0 0.0.0.0 10.1.1.254\nR1(config)# ip route 192.168.50.0 255.255.255.0 10.1.1.2"}, {"id": "cisco-sh-ip-cef", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show ip cef", "aliases": [], "purpose": "Shows CEF forwarding entries \u2014 the actual FIB used for hardware/software forwarding.", "tokens": [{"t": "show ip cef", "d": "CEF FIB"}], "syntax": "show ip cef [prefix]", "flags": [], "sample": "Prefix               Next Hop             Interface\n0.0.0.0/0            10.1.1.254           GigabitEthernet0/0\n10.1.1.0/24          attached             GigabitEthernet0/0", "annotations": [], "when": "When RIB looks fine but forwarding is wrong.", "whenNot": "Advanced \u2014 learn RIB first.", "safety": "safe", "related": ["cisco-sh-ip-route"], "tags": ["cef", "forwarding"], "equivalents": {"juniper": "show route forwarding-table"}, "sandboxOutput": "Prefix               Next Hop             Interface\n0.0.0.0/0            10.1.1.254           GigabitEthernet0/0\n10.1.1.0/24          attached             GigabitEthernet0/0"}, {"id": "cisco-sh-users", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show users", "aliases": [], "purpose": "Lists active management sessions (console/VTY).", "tokens": [{"t": "show users", "d": "Active lines"}], "syntax": "show users", "flags": [], "sample": "    Line       User       Host(s)              Idle       Location\n*  2 vty 0     admin      idle                 00:00:00 10.1.1.100", "annotations": [{"field": "*", "note": "Your current session"}], "when": "See who is logged in before disruptive changes.", "whenNot": "Does not show AAA history.", "safety": "safe", "related": [], "tags": ["mgmt", "security"], "equivalents": {}, "sandboxOutput": "    Line       User       Host(s)              Idle       Location\n*  2 vty 0     admin      idle                 00:00:00 10.1.1.100"}, {"id": "cisco-reload", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "reload", "aliases": [], "purpose": "Reboots the device. Unsaved running-config is lost unless written.", "tokens": [{"t": "reload", "d": "Reboot"}], "syntax": "reload\nreload in 10  (scheduled)", "flags": [], "sample": "R1# reload\nSystem configuration has been modified. Save? [yes/no]: yes\nProceed with reload? [confirm]", "annotations": [], "when": "Planned maintenance with rollback timers sometimes.", "whenNot": "Can take site offline \u2014 use reload cancel / confirm carefully.", "safety": "danger", "related": ["cisco-wr"], "tags": ["reload", "danger"], "equivalents": {"juniper": "request system reboot", "paloalto": "request restart system", "linux": "reboot", "powershell": "Restart-Computer"}, "sandboxOutput": "R1# reload\nSystem configuration has been modified. Save? [yes/no]: yes\nProceed with reload? [confirm]"}, {"id": "cisco-sh-etherchannel", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show etherchannel summary", "aliases": ["sh eth sum"], "purpose": "Port-channel status and member ports.", "tokens": [{"t": "show etherchannel summary", "d": "LAG overview"}], "syntax": "show etherchannel summary", "flags": [], "sample": "Flags:  D - down  P - bundled in port-channel\nNumber of channel-groups in use: 1\nGroup  Port-channel  Protocol    Ports\n1      Po1(SU)         LACP      Gi0/1(P) Gi0/2(P)", "annotations": [{"field": "P", "note": "Member bundled"}, {"field": "SU", "note": "Layer2 in-use"}], "when": "Verify LAG health.", "whenNot": "Members must match speed/duplex/VLAN.", "safety": "safe", "related": [], "tags": ["etherchannel", "l2"], "equivalents": {"juniper": "show lacp interfaces", "linux": "cat /proc/net/bonding/*"}, "sandboxOutput": "Flags:  D - down  P - bundled in port-channel\nNumber of channel-groups in use: 1\nGroup  Port-channel  Protocol    Ports\n1      Po1(SU)         LACP      Gi0/1(P) Gi0/2(P)"}, {"id": "cisco-debug-caution", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "debug ip packet", "aliases": [], "purpose": "Enables packet debug \u2014 extremely chatty; can overwhelm CPU. Teaching entry for caution.", "tokens": [{"t": "debug", "d": "Live diagnostic stream"}], "syntax": "debug ip packet\nundebug all", "flags": [], "sample": "IP: s=10.1.1.50 (GigabitEthernet0/0), d=10.1.1.1, len 84, rcvd 3", "annotations": [], "when": "Lab only when you understand impact.", "whenNot": "Production danger \u2014 prefer packet capture.", "safety": "danger", "related": ["cisco-sh-ip-int-br"], "tags": ["debug", "danger"], "equivalents": {}, "sandboxOutput": "IP: s=10.1.1.50 (GigabitEthernet0/0), d=10.1.1.1, len 84, rcvd 3"}, {"id": "cisco-sh-ip-dhcp", "vendor": "cisco", "family": "IOS/XE", "mode": "exec", "cmd": "show ip dhcp binding", "aliases": [], "purpose": "DHCP server lease table on IOS DHCP server.", "tokens": [{"t": "show ip dhcp binding", "d": "Leases"}], "syntax": "show ip dhcp binding", "flags": [], "sample": "IP address       Client-ID/       Lease expiration        Type\n10.1.1.50        01aa.bbcc.1122.33  Jul 25 2026 10:00 AM  Automatic", "annotations": [], "when": "Find which MAC got which IP.", "whenNot": "Only if device is DHCP server.", "safety": "safe", "related": [], "tags": ["dhcp"], "equivalents": {"linux": "journalctl / leases file", "powershell": "Get-DhcpServerv4Lease"}, "sandboxOutput": "IP address       Client-ID/       Lease expiration        Type\n10.1.1.50        01aa.bbcc.1122.33  Jul 25 2026 10:00 AM  Automatic"}, {"id": "junos-sh-version", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "show version", "aliases": [], "purpose": "Junos version, model, and hostname.", "tokens": [{"t": "show version", "d": "Software identity"}], "syntax": "show version", "flags": [], "sample": "Hostname: R1\nModel: vmx\nJunos: 21.4R3.15", "annotations": [], "when": "Inventory.", "whenNot": "n/a", "safety": "safe", "related": [], "tags": ["inventory"], "equivalents": {"cisco": "show version", "paloalto": "show system info"}, "sandboxOutput": "Hostname: R1\nModel: vmx\nJunos: 21.4R3.15"}, {"id": "junos-sh-int-ext", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "show interfaces extensive", "aliases": [], "purpose": "Detailed counters/errors for an interface.", "tokens": [{"t": "show interfaces extensive", "d": "Full stats"}], "syntax": "show interfaces ge-0/0/0 extensive", "flags": [], "sample": "Physical interface: ge-0/0/0, Enabled, Physical link is Up\n  Input errors: 0, Output errors: 0, Carrier transitions: 1\n  Active alarms : None", "annotations": [], "when": "L1 error hunting.", "whenNot": "Verbose \u2014 specify interface.", "safety": "safe", "related": ["junos-sh-int-terse"], "tags": ["interfaces", "errors"], "equivalents": {"cisco": "show interfaces"}, "sandboxOutput": "Physical interface: ge-0/0/0, Enabled, Physical link is Up\n  Input errors: 0, Output errors: 0, Carrier transitions: 1\n  Active alarms : None"}, {"id": "junos-monitor-traffic", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "monitor traffic interface", "aliases": [], "purpose": "tcpdump-like capture on a Junos interface (use carefully).", "tokens": [{"t": "monitor traffic interface", "d": "Packet monitor"}], "syntax": "monitor traffic interface ge-0/0/0 matching \"host 10.1.1.50\"", "flags": [], "sample": "12:01:04.112 In IP 10.1.1.50 > 10.1.1.1: ICMP echo request", "annotations": [], "when": "Quick packet proof on Junos.", "whenNot": "Can impact RE CPU \u2014 match filters tightly.", "safety": "caution", "related": [], "tags": ["capture"], "equivalents": {"linux": "tcpdump", "cisco": "EPC"}, "sandboxOutput": "12:01:04.112 In IP 10.1.1.50 > 10.1.1.1: ICMP echo request"}, {"id": "junos-request-reboot", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "request system reboot", "aliases": [], "purpose": "Reboots the Junos device.", "tokens": [{"t": "request system reboot", "d": "Reboot"}], "syntax": "request system reboot", "flags": [], "sample": "Reboot the system ? [yes,no] (no) yes", "annotations": [], "when": "Maintenance windows.", "whenNot": "Confirm committed config first.", "safety": "danger", "related": ["junos-commit"], "tags": ["reload", "danger"], "equivalents": {"cisco": "reload", "paloalto": "request restart system"}, "sandboxOutput": "Reboot the system ? [yes,no] (no) yes"}, {"id": "junos-sh-chassis", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "show chassis hardware", "aliases": [], "purpose": "Hardware inventory: FPCs, PICs, serials.", "tokens": [{"t": "show chassis hardware", "d": "Hardware list"}], "syntax": "show chassis hardware", "flags": [], "sample": "Item         Version  Part number  Serial number\nChassis                           VN1234\nMidplane     REV 08", "annotations": [], "when": "RMA and inventory.", "whenNot": "n/a", "safety": "safe", "related": [], "tags": ["inventory"], "equivalents": {}, "sandboxOutput": "Item         Version  Part number  Serial number\nChassis                           VN1234\nMidplane     REV 08"}, {"id": "junos-edit", "vendor": "juniper", "family": "Junos", "mode": "config", "cmd": "edit", "aliases": [], "purpose": "Navigates into a configuration hierarchy hierarchy for shorter set paths.", "tokens": [{"t": "edit", "d": "Enter subtree"}], "syntax": "edit interfaces ge-0/0/0 unit 0\nset family inet address 10.1.1.1/24\ntop", "flags": [], "sample": "[edit]\nuser@R1# edit interfaces ge-0/0/0 unit 0\n[edit interfaces ge-0/0/0 unit 0]\nuser@R1#", "annotations": [], "when": "Faster interactive config.", "whenNot": "Remember top/exit to navigate.", "safety": "caution", "related": ["junos-set"], "tags": ["config"], "equivalents": {}, "sandboxOutput": "[edit]\nuser@R1# edit interfaces ge-0/0/0 unit 0\n[edit interfaces ge-0/0/0 unit 0]\nuser@R1#"}, {"id": "junos-pipe-match", "vendor": "juniper", "family": "Junos", "mode": "operational", "cmd": "show interfaces | match", "aliases": [], "purpose": "Pipe filters \u2014 match/except/find \u2014 essential Junos CLI skill.", "tokens": [{"t": "| match", "d": "Regex filter lines"}], "syntax": "show interfaces terse | match up\nshow configuration | match \"10.1.1.\"", "flags": [], "sample": "ge-0/0/0                up    up\nge-0/0/0.0              up    up   inet     10.1.1.1/24", "annotations": [], "when": "Trim huge outputs.", "whenNot": "Regex syntax differs slightly from Cisco include.", "safety": "safe", "related": [], "tags": ["cli", "pipes"], "equivalents": {"cisco": "show run | include"}, "sandboxOutput": "ge-0/0/0                up    up\nge-0/0/0.0              up    up   inet     10.1.1.1/24"}, {"id": "pan-show-run-sec", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "show running security-policy", "aliases": [], "purpose": "Displays active security policy rules.", "tokens": [{"t": "show running security-policy", "d": "Live security rules"}], "syntax": "show running security-policy", "flags": [], "sample": "ALLOW-WEB {\n  from trust;\n  to untrust;\n  application ssl;\n  action allow;\n}", "annotations": [], "when": "Audit what is actually enforced.", "whenNot": "Order matters \u2014 read carefully.", "safety": "safe", "related": ["pan-security-policy"], "tags": ["policy", "audit"], "equivalents": {"cisco": "show access-lists"}, "sandboxOutput": "ALLOW-WEB {\n  from trust;\n  to untrust;\n  application ssl;\n  action allow;\n}"}, {"id": "pan-show-nat", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "show running nat-policy", "aliases": [], "purpose": "Active NAT rules.", "tokens": [{"t": "show running nat-policy", "d": "NAT policy"}], "syntax": "show running nat-policy", "flags": [], "sample": "PAT-OUT {\n  source-translation {\n    dynamic-ip-and-port {\n      interface-address {\n        interface ethernet1/2;\n      }\n    }\n  }\n}", "annotations": [], "when": "Verify PAT/DNAT design.", "whenNot": "Pair with session browser.", "safety": "safe", "related": ["pan-nat-rule"], "tags": ["nat"], "equivalents": {}, "sandboxOutput": "PAT-OUT {\n  source-translation {\n    dynamic-ip-and-port {\n      interface-address {\n        interface ethernet1/2;\n      }\n    }\n  }\n}"}, {"id": "pan-show-counter", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "show counter global", "aliases": [], "purpose": "Global packet counters \u2014 drops and reasons.", "tokens": [{"t": "show counter global", "d": "Global counters"}, {"t": "filter delta yes", "d": "Since last check"}], "syntax": "show counter global filter delta yes", "flags": [], "sample": "flow_policy_deny  42  0  packets denied by policy", "annotations": [], "when": "Find why packets drop.", "whenNot": "Need delta for rate of change.", "safety": "safe", "related": [], "tags": ["troubleshooting", "drops"], "equivalents": {}, "sandboxOutput": "flow_policy_deny  42  0  packets denied by policy"}, {"id": "pan-request-restart", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "request restart system", "aliases": [], "purpose": "Reboots the firewall.", "tokens": [{"t": "request restart system", "d": "Reboot"}], "syntax": "request restart system", "flags": [], "sample": "Warning: Device is going to be rebooted. Please confirm.", "annotations": [], "when": "Maintenance only.", "whenNot": "HA pair considerations.", "safety": "danger", "related": ["pan-commit"], "tags": ["reload", "danger"], "equivalents": {"cisco": "reload", "juniper": "request system reboot"}, "sandboxOutput": "Warning: Device is going to be rebooted. Please confirm."}, {"id": "pan-show-highavail", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "show high-availability all", "aliases": [], "purpose": "HA state, peer, and sync status.", "tokens": [{"t": "show high-availability all", "d": "HA summary"}], "syntax": "show high-availability all", "flags": [], "sample": "Mode: Active-Passive\nLocal state: active\nPeer state: passive\nConfiguration sync: synchronized", "annotations": [], "when": "Validate HA before changes.", "whenNot": "n/a on standalone.", "safety": "safe", "related": [], "tags": ["ha"], "equivalents": {}, "sandboxOutput": "Mode: Active-Passive\nLocal state: active\nPeer state: passive\nConfiguration sync: synchronized"}, {"id": "pan-traceroute", "vendor": "paloalto", "family": "PAN-OS", "mode": "operational", "cmd": "traceroute host", "aliases": [], "purpose": "Traceroute from the firewall.", "tokens": [{"t": "traceroute host", "d": "Path trace"}], "syntax": "traceroute host 8.8.8.8", "flags": [], "sample": " 1  203.0.113.6  1 ms\n 2  8.8.8.8  14 ms", "annotations": [], "when": "Path from firewall VR.", "whenNot": "Specify source if needed.", "safety": "safe", "related": ["pan-ping"], "tags": ["path"], "equivalents": {"cisco": "traceroute", "linux": "traceroute"}, "sandboxOutput": " 1  203.0.113.6  1 ms\n 2  8.8.8.8  14 ms"}, {"id": "linux-dig", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "dig", "aliases": ["host", "nslookup"], "purpose": "DNS lookup with full answer section control.", "tokens": [{"t": "dig", "d": "DNS client"}, {"t": "@server", "d": "Query specific resolver"}], "syntax": "dig example.com\ndig @1.1.1.1 example.com A +short", "flags": [], "sample": ";; ANSWER SECTION:\nexample.com. 300 IN A 93.184.216.34", "annotations": [], "when": "Authoritative vs recursive debugging.", "whenNot": "Install dnsutils/bind-tools if missing.", "safety": "safe", "related": ["linux-ping"], "tags": ["dns"], "equivalents": {"powershell": "Resolve-DnsName"}, "sandboxOutput": ";; ANSWER SECTION:\nexample.com. 300 IN A 93.184.216.34"}, {"id": "linux-nmap-mind", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "nmap", "aliases": [], "purpose": "Network scanner for discovery and port audits (lab/authorized use only).", "tokens": [{"t": "nmap", "d": "Scanner"}, {"t": "-sV", "d": "Service version"}, {"t": "-p", "d": "Ports"}], "syntax": "nmap -sV -p 22,80,443 10.1.1.0/24", "flags": [], "sample": "Nmap scan report for 10.1.1.10\n22/tcp open  ssh  OpenSSH 8.9", "annotations": [], "when": "Authorized discovery and audit.", "whenNot": "Unauthorized scanning is unethical/illegal.", "safety": "caution", "related": [], "tags": ["discovery", "security"], "equivalents": {}, "sandboxOutput": "Nmap scan report for 10.1.1.10\n22/tcp open  ssh  OpenSSH 8.9"}, {"id": "linux-iperf3", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "iperf3", "aliases": [], "purpose": "Measures TCP/UDP throughput between two endpoints.", "tokens": [{"t": "iperf3", "d": "Bandwidth test"}, {"t": "-s", "d": "Server"}, {"t": "-c", "d": "Client"}], "syntax": "iperf3 -s\niperf3 -c 10.1.1.10 -t 30", "flags": [], "sample": "[ ID] Interval  Transfer  Bitrate\n[  5] 0.00-30.00 sec  3.28 GBytes  939 Mbits/sec", "annotations": [], "when": "Prove link capacity / find bottlenecks.", "whenNot": "Needs server+client; can saturate links.", "safety": "caution", "related": [], "tags": ["performance"], "equivalents": {}, "sandboxOutput": "[ ID] Interval  Transfer  Bitrate\n[  5] 0.00-30.00 sec  3.28 GBytes  939 Mbits/sec"}, {"id": "linux-mtr", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "mtr", "aliases": [], "purpose": "Combines traceroute + ping continuously per hop.", "tokens": [{"t": "mtr", "d": "My traceroute"}, {"t": "-rw", "d": "Report mode"}], "syntax": "mtr -rw -c 50 8.8.8.8", "flags": [], "sample": "HOST: pc1  Loss%  Snt  Last  Avg  Best  Wrst\n1.|-- 10.1.1.1  0.0%  50  0.4  0.4  0.3  1.1\n2.|-- 8.8.8.8   0.0%  50  14.0 14.2 13.8 16.0", "annotations": [], "when": "Intermittent loss along a path.", "whenNot": "May need install.", "safety": "safe", "related": ["linux-traceroute"], "tags": ["path", "troubleshooting"], "equivalents": {}, "sandboxOutput": "HOST: pc1  Loss%  Snt  Last  Avg  Best  Wrst\n1.|-- 10.1.1.1  0.0%  50  0.4  0.4  0.3  1.1\n2.|-- 8.8.8.8   0.0%  50  14.0 14.2 13.8 16.0"}, {"id": "linux-journalctl", "vendor": "linux", "family": "Bash/systemd", "mode": "shell", "cmd": "journalctl", "aliases": [], "purpose": "Query systemd journal \u2014 network service errors often live here.", "tokens": [{"t": "journalctl", "d": "Journal viewer"}, {"t": "-u", "d": "Unit"}, {"t": "-b", "d": "This boot"}], "syntax": "journalctl -u NetworkManager -b --no-pager | tail", "flags": [], "sample": "Jul 24 10:01:02 pc1 NetworkManager[811]: <info> device (eth0): link connected", "annotations": [], "when": "Why did DHCP/NM fail?", "whenNot": "Permissions may restrict.", "safety": "safe", "related": ["linux-nmcli"], "tags": ["logs", "host"], "equivalents": {}, "sandboxOutput": "Jul 24 10:01:02 pc1 NetworkManager[811]: <info> device (eth0): link connected"}, {"id": "linux-sysctl-fwd", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "sysctl net.ipv4.ip_forward", "aliases": [], "purpose": "Checks/enables IPv4 forwarding \u2014 required for Linux routers.", "tokens": [{"t": "sysctl", "d": "Kernel knobs"}, {"t": "ip_forward", "d": "Routing enable"}], "syntax": "sysctl net.ipv4.ip_forward\nsysctl -w net.ipv4.ip_forward=1", "flags": [], "sample": "net.ipv4.ip_forward = 1", "annotations": [], "when": "Linux router/NAT box setup.", "whenNot": "Make persistent via sysctl.d.", "safety": "caution", "related": [], "tags": ["routing", "linux-router"], "equivalents": {}, "sandboxOutput": "net.ipv4.ip_forward = 1"}, {"id": "linux-nft", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "nft", "aliases": ["iptables"], "purpose": "nftables firewall configuration (modern iptables replacement).", "tokens": [{"t": "nft", "d": "Netfilter cfg"}, {"t": "list ruleset", "d": "Show rules"}], "syntax": "nft list ruleset\nnft add rule inet filter input tcp dport 22 accept", "flags": [], "sample": "table inet filter {\n  chain input { type filter hook input priority 0; policy drop;\n    tcp dport 22 accept\n  }\n}", "annotations": [], "when": "Host firewall on modern Linux.", "whenNot": "Policy drop without SSH allow = lockout.", "safety": "danger", "related": [], "tags": ["firewall", "security"], "equivalents": {"powershell": "New-NetFirewallRule", "cisco": "ACL", "paloalto": "security rules"}, "sandboxOutput": "table inet filter {\n  chain input { type filter hook input priority 0; policy drop;\n    tcp dport 22 accept\n  }\n}"}, {"id": "linux-scp", "vendor": "linux", "family": "Bash", "mode": "shell", "cmd": "scp", "aliases": ["sftp", "rsync"], "purpose": "Secure copy over SSH \u2014 move configs/pcaps between hosts.", "tokens": [{"t": "scp", "d": "Secure copy"}], "syntax": "scp ./capture.pcap user@10.1.1.50:/tmp/", "flags": [], "sample": "capture.pcap 100% 2048KB 2.0MB/s 00:01", "annotations": [], "when": "Move evidence and configs.", "whenNot": "Keys/permissions required.", "safety": "safe", "related": [], "tags": ["ops", "files"], "equivalents": {}, "sandboxOutput": "capture.pcap 100% 2048KB 2.0MB/s 00:01"}, {"id": "ps-get-nettcp", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Get-NetTCPConnection", "aliases": [], "purpose": "Lists TCP connections and listening ports (ss equivalent).", "tokens": [{"t": "Get-NetTCPConnection", "d": "TCP table"}], "syntax": "Get-NetTCPConnection -State Listen\nGet-NetTCPConnection -RemotePort 443", "flags": [], "sample": "LocalAddress LocalPort RemoteAddress RemotePort State  OwningProcess\n0.0.0.0      22        0.0.0.0       0          Listen 812", "annotations": [], "when": "Find listeners and established sessions.", "whenNot": "Map OwningProcess via Get-Process.", "safety": "safe", "related": ["ps-tnc"], "tags": ["sockets"], "equivalents": {"linux": "ss -tulpn"}, "sandboxOutput": "LocalAddress LocalPort RemoteAddress RemotePort State  OwningProcess\n0.0.0.0      22        0.0.0.0       0          Listen 812"}, {"id": "ps-set-netip", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "New-NetIPAddress", "aliases": ["Set-NetIPAddress"], "purpose": "Assigns a static IP to a Windows adapter.", "tokens": [{"t": "New-NetIPAddress", "d": "Add IP"}], "syntax": "New-NetIPAddress -InterfaceAlias 'Ethernet' -IPAddress 10.1.1.50 -PrefixLength 24 -DefaultGateway 10.1.1.1", "flags": [], "sample": "IPAddress      : 10.1.1.50\nInterfaceAlias : Ethernet\nPrefixLength   : 24", "annotations": [], "when": "Static addressing on servers.", "whenNot": "May need to remove old DHCP address.", "safety": "caution", "related": ["ps-get-netip"], "tags": ["config", "host"], "equivalents": {"linux": "nmcli / ip addr add"}, "sandboxOutput": "IPAddress      : 10.1.1.50\nInterfaceAlias : Ethernet\nPrefixLength   : 24"}, {"id": "ps-disable-adapter", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Disable-NetAdapter", "aliases": [], "purpose": "Disables a network adapter.", "tokens": [{"t": "Disable-NetAdapter", "d": "Admin disable"}], "syntax": "Disable-NetAdapter -Name 'Wi-Fi' -Confirm:$false", "flags": [], "sample": "# Adapter Wi-Fi disabled", "annotations": [], "when": "Force traffic onto Ethernet; lab isolation.", "whenNot": "Can cut your remote session.", "safety": "danger", "related": ["ps-get-netadapter"], "tags": ["danger", "host"], "equivalents": {"linux": "ip link set down"}, "sandboxOutput": "# Adapter Wi-Fi disabled"}, {"id": "ps-get-netipconfig", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Get-NetIPConfiguration", "aliases": [], "purpose": "One-shot summary: IP, gateway, DNS per interface.", "tokens": [{"t": "Get-NetIPConfiguration", "d": "Host net summary"}], "syntax": "Get-NetIPConfiguration", "flags": [], "sample": "InterfaceAlias : Ethernet\nIPv4Address    : 10.1.1.50\nIPv4DefaultGateway : 10.1.1.1\nDNSServer      : 10.1.1.10", "annotations": [], "when": "Fast Windows host network overview.", "whenNot": "n/a", "safety": "safe", "related": ["ps-get-netip"], "tags": ["beginner", "host"], "equivalents": {"linux": "ip addr; ip route; resolvectl"}, "sandboxOutput": "InterfaceAlias : Ethernet\nIPv4Address    : 10.1.1.50\nIPv4DefaultGateway : 10.1.1.1\nDNSServer      : 10.1.1.10"}, {"id": "ps-netsh-wlan", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "netsh wlan show profiles", "aliases": [], "purpose": "Lists saved Wi-Fi profiles (classic netsh still useful).", "tokens": [{"t": "netsh wlan", "d": "WLAN helper"}], "syntax": "netsh wlan show profiles\nnetsh wlan show interfaces", "flags": [], "sample": "Profiles on interface Wi-Fi:\n    All User Profile : CorpWifi", "annotations": [], "when": "Wireless client troubleshooting.", "whenNot": "Showing keys needs elevation and policy allow.", "safety": "safe", "related": [], "tags": ["wifi", "host"], "equivalents": {}, "sandboxOutput": "Profiles on interface Wi-Fi:\n    All User Profile : CorpWifi"}, {"id": "ps-restart-netadapter", "vendor": "powershell", "family": "Windows PowerShell", "mode": "shell", "cmd": "Restart-NetAdapter", "aliases": [], "purpose": "Restarts a NIC \u2014 soft bounce for stubborn link issues.", "tokens": [{"t": "Restart-NetAdapter", "d": "Bounce NIC"}], "syntax": "Restart-NetAdapter -Name Ethernet", "flags": [], "sample": "# Adapter restarted", "annotations": [], "when": "After driver/VLAN glitches.", "whenNot": "Brief outage on that NIC.", "safety": "caution", "related": ["ps-get-netadapter"], "tags": ["host"], "equivalents": {"linux": "ip link set down; ip link set up"}, "sandboxOutput": "# Adapter restarted"}];
+</script>
+<script>
+/* NetForge offline app */
+(function () {
+  "use strict";
+
+  const VENDORS = [
+    { id: "cisco", label: "Cisco IOS/XE", prompt: { exec: "R1#", config: "R1(config)#", "config-if": "R1(config-if)#" }, color: "cisco" },
+    { id: "juniper", label: "Juniper Junos", prompt: { operational: "user@R1>", config: "user@R1#" }, color: "juniper" },
+    { id: "paloalto", label: "Palo Alto", prompt: { operational: "admin@PA-VM>", config: "admin@PA-VM#" }, color: "paloalto" },
+    { id: "linux", label: "Linux Bash", prompt: { shell: "user@host:~$" }, color: "linux" },
+    { id: "powershell", label: "PowerShell", prompt: { shell: "PS C:\\>" }, color: "powershell" },
+  ];
+
+  const COMPARE_TASKS = [
+    { id: "show-int", title: "Show interfaces / addresses", map: { cisco: "cisco-sh-ip-int-br", juniper: "junos-sh-int-terse", paloalto: "pan-sh-int-all", linux: "linux-ip-addr", powershell: "ps-get-netip" }, note: "Cisco applies changes live; Junos/PAN-OS use candidate+commit." },
+    { id: "show-route", title: "Show routing table", map: { cisco: "cisco-sh-ip-route", juniper: "junos-sh-route", paloalto: "pan-sh-routing", linux: "linux-ip-route", powershell: "ps-get-netroute" }, note: "Junos preference ≈ Cisco AD. Use 'ip route get' on Linux for a single lookup." },
+    { id: "static-route", title: "Add a static / default route", map: { cisco: "cisco-ip-route-static", juniper: "junos-static", paloalto: "pan-set", linux: "linux-ip-route", powershell: "ps-new-netroute" }, note: "On Junos/PAN-OS remember commit. Linux ip route is often non-persistent unless scripted." },
+    { id: "save-config", title: "Save / activate configuration", map: { cisco: "cisco-wr", juniper: "junos-commit", paloalto: "pan-commit", linux: "linux-nmcli", powershell: "ps-set-netip" }, note: "Cisco: running→startup. Junos/PAN-OS: candidate→committed. Windows IP cmdlets persist by default." },
+    { id: "discover", title: "Neighbor discovery", map: { cisco: "cisco-sh-lldp-nei", juniper: "junos-sh-lldp", paloalto: "pan-lldp", linux: "linux-ip-neigh", powershell: "ps-get-netneighbor" }, note: "LLDP is multi-vendor; CDP is Cisco-only. Hosts show ARP/neighbor, not LLDP unless lldpd installed." },
+    { id: "acl-fw", title: "Filter / firewall policy", map: { cisco: "cisco-acl-ext", juniper: "junos-firewall", paloalto: "pan-security-policy", linux: "linux-nft", powershell: "ps-firewall-rule" }, note: "PAN-OS is zone-based. Order/first-match matters almost everywhere." },
+    { id: "ping", title: "Reachability test", map: { cisco: "cisco-ping", juniper: "junos-ping", paloalto: "pan-ping", linux: "linux-ping", powershell: "ps-tnc" }, note: "Prefer Test-NetConnection / curl when testing apps; ICMP can be blocked." },
+  ];
+
+  const TOOLKIT = [
+    { cat: "Emulation / labs", items: [
+      { name: "Cisco Packet Tracer", why: "Beginner switching/routing labs with visual topology.", when: "CCNA-style practice without hardware.", tip: "Works offline after install." },
+      { name: "GNS3 / EVE-NG", why: "Real NOS images (IOS, Junos, PAN-OS VMs).", when: "Multi-vendor realism and firewall labs.", tip: "Download images once; lab offline on LAN." },
+      { name: "Containerlab", why: "Declarative container/VM network labs as code.", when: "Automation + CI-friendly topologies.", tip: "Great with Netmiko against lab nodes." },
+    ]},
+    { cat: "Capture / analysis", items: [
+      { name: "Wireshark", why: "GUI deep packet inspection.", when: "Decode handshakes, DHCP, TLS ClientHello.", tip: "Open pcaps captured with tcpdump offline." },
+      { name: "tcpdump / tshark", why: "CLI capture on Linux/network gear.", when: "SSH-only boxes and quick filters.", tip: "Write -w file.pcap then analyze later." },
+    ]},
+    { cat: "Connectivity", items: [
+      { name: "ping / traceroute / mtr", why: "Path & loss basics.", when: "First 60 seconds of any outage.", tip: "mtr continuous view beats one-shot traceroute." },
+      { name: "iperf3", why: "Measure real throughput.", when: "Prove a link is slow vs app is slow.", tip: "Run server on far end, client near user." },
+    ]},
+    { cat: "Discovery", items: [
+      { name: "Nmap", why: "Port/service discovery (authorized only).", when: "Audit what is listening.", tip: "Pair with NetForge nmap mindset notes." },
+      { name: "LLDP / CDP", why: "Physical neighbor mapping.", when: "Cable tracing and uplink verification.", tip: "Prefer LLDP in multi-vendor fabrics." },
+    ]},
+    { cat: "Automation", items: [
+      { name: "Netmiko", why: "SSH CLI automation across vendors.", when: "Backup configs, push standards, audits.", tip: "Practice scripts in Automation Lab offline." },
+      { name: "NAPALM / Ansible", why: "Getters/setters and playbooks.", when: "Fleet changes with checks.", tip: "Start with Netmiko fundamentals first." },
+      { name: "ncclient", why: "NETCONF structured config.", when: "Junos/modern YANG devices.", tip: "Complement to CLI scraping." },
+    ]},
+    { cat: "On-box", items: [
+      { name: "GuestShell", why: "Linux container + Python on IOS-XE.", when: "On-box automation near the device.", tip: "See GuestShell lab in this app." },
+      { name: "EEM / IP SLA", why: "Event-driven & probe-based reactions.", when: "Auto-notify or track reachability.", tip: "Lab carefully — can flap things." },
+    ]},
+    { cat: "Soft skills", items: [
+      { name: "Change windows & rollback", why: "Protect production.", when: "Every write operation.", tip: "Junos commit confirmed is a model habit." },
+      { name: "Runbooks", why: "Repeatable incident response.", when: "Sev1 nights and handoffs.", tip: "Turn NetForge scenarios into your runbook." },
+    ]},
+  ];
+
+  const DAILY = [
+    { id: "flash", title: "10 flashcards", mins: 8, action: "drills", detail: "Mixed vendors — flip and mark hard cards." },
+    { id: "deep", title: "5 encyclopedia deep-dives", mins: 10, action: "encyclopedia", detail: "Open 5 commands; bookmark anything fuzzy." },
+    { id: "sandbox", title: "1 CLI sandbox scenario", mins: 8, action: "sandbox", detail: "Run the suggested scenario commands." },
+    { id: "host", title: "Host-side drill (Linux or PowerShell)", mins: 6, action: "encyclopedia", detail: "Filter vendor=linux or powershell." },
+    { id: "journal", title: "Journal one troubleshooting thought", mins: 4, action: "planner", detail: "Write what you’d check first on an outage." },
+  ];
+
+  const WEEKLY = [
+    { day: "Mon", focus: "L2/L3 fundamentals + Cisco show commands", action: "encyclopedia", vendor: "cisco" },
+    { day: "Tue", focus: "Junos commit model + vendor compare", action: "compare", vendor: "juniper" },
+    { day: "Wed", focus: "Palo Alto zones & security policy", action: "encyclopedia", vendor: "paloalto" },
+    { day: "Thu", focus: "Linux + PowerShell host networking", action: "encyclopedia", vendor: "linux" },
+    { day: "Fri", focus: "Netmiko / GuestShell automation lab", action: "labs", vendor: null },
+    { day: "Sat", focus: "Full incident scenario (sandbox + quiz)", action: "drills", vendor: null },
+    { day: "Sun", focus: "Review weak cards + toolkit reading", action: "toolkit", vendor: null },
+  ];
+
+  const SCENARIOS = [
+    { id: "host-down", title: "Host can’t ping gateway", vendor: "linux",
+      steps: ["ip -br addr", "ip route", "ip neigh", "ping -c 4 10.1.1.1"],
+      explain: "Confirm address → default route → ARP to gateway → then ICMP." },
+    { id: "cisco-uplink", title: "VLAN users offline across trunk", vendor: "cisco",
+      steps: ["show vlan brief", "show interfaces trunk", "show spanning-tree vlan 10", "show mac address-table vlan 10"],
+      explain: "VLAN exists? Allowed on trunk? STP forwarding? MAC learned?" },
+    { id: "junos-commit", title: "Safe Junos remote change", vendor: "juniper",
+      steps: ["configure", "show | compare", "commit confirmed 5", "commit check"],
+      explain: "Always diff, prefer commit confirmed when remote." },
+    { id: "pan-policy", title: "App blocked through firewall", vendor: "paloalto",
+      steps: ["show session all filter source 10.1.1.50", "test security-policy-match from trust to untrust source 10.1.1.50 destination 93.184.216.34 protocol 6 destination-port 443", "show running security-policy", "show counter global filter delta yes"],
+      explain: "Session present? Policy match? Counters show denies?" },
+    { id: "win-port", title: "Windows app port unreachable", vendor: "powershell",
+      steps: ["Get-NetIPConfiguration", "Get-NetRoute -DestinationPrefix '0.0.0.0/0'", "Test-NetConnection 10.1.1.10 -Port 443", "Get-NetFirewallRule -PolicyStore ActiveStore | Select-Object -First 1"],
+      explain: "IP/GW first, then TCP test, then firewall." },
+  ];
+
+  const QUIZZES = [
+    { q: "Host can’t ping its gateway. What are the best first three Linux checks?",
+      opts: ["ip addr / ip route / ip neigh", "nmap whole Internet / reboot / ignore", "iptables flush / disable SELinux / hope", "tcpdump only / no addressing check"],
+      a: 0 },
+    { q: "Which model buffers config until commit?",
+      opts: ["Cisco IOS running-config only", "Junos candidate configuration", "Windows IP changes never persist", "Ping tables"],
+      a: 1 },
+    { q: "PAN-OS security policy is primarily based on:",
+      opts: ["MAC ACLs only", "Zones (from/to) plus match criteria", "CDP community strings", "Spanning Tree priorities"],
+      a: 1 },
+    { q: "Netmiko is mainly used to:",
+      opts: ["Compile C packet parsers in-browser", "Automate SSH CLI across network vendors", "Replace Wireshark captures", "Provision iPhone cellular APNs"],
+      a: 1 },
+    { q: "show ip interface brief is closest to which Junos command?",
+      opts: ["show chassis hardware", "show interfaces terse", "request system reboot", "show | compare"],
+      a: 1 },
+    { q: "Best PowerShell cmdlet to test a TCP port?",
+      opts: ["Get-Process", "Test-NetConnection -Port", "Clear-DnsClientCache only", "Restart-Computer"],
+      a: 1 },
+    { q: "commit confirmed on Junos helps because:",
+      opts: ["It disables SSH forever", "It auto-rollbacks if you can’t confirm", "It upgrades Junos automatically", "It clears ARP"],
+      a: 1 },
+    { q: "Which tool measures throughput between two endpoints?",
+      opts: ["iperf3", "LLDP", "show vlan brief", "nslookup"],
+      a: 0 },
+  ];
+
+  const LABS = [
+    {
+      id: "netmiko-basics",
+      title: "Netmiko: connect & show",
+      blurb: "SSH to a device, run a show command, print output. Run this on your lab PC with Python + netmiko installed.",
+      lang: "python",
+      lines: [
+        { code: "from netmiko import ConnectHandler", explain: "Import Netmiko’s connection helper supporting many platforms." },
+        { code: "device = {\n  'device_type': 'cisco_ios',\n  'host': '10.1.1.1',\n  'username': 'admin',\n  'password': 'SECRET',\n}", explain: "Connection inventory dict. Never commit real secrets to git — use env vars or a vault." },
+        { code: "conn = ConnectHandler(**device)", explain: "Opens SSH, handles login/enable patterns for the platform." },
+        { code: "out = conn.send_command('show ip interface brief')", explain: "Executes a command in privileged/exec mode and returns the text." },
+        { code: "print(out)\nconn.disconnect()", explain: "Always disconnect to free the VTY session." },
+      ],
+      quiz: { q: "Where should real passwords live?", opts: ["Hardcoded in GitHub", "Environment/vault/secrets manager", "In the prompt screenshot", "Public pastebin"], a: 1 }
+    },
+    {
+      id: "netmiko-config",
+      title: "Netmiko: push config safely",
+      blurb: "send_config_set applies lines in config mode. Lab only — review diffs mentally first.",
+      lang: "python",
+      lines: [
+        { code: "cmds = [\n  'interface Loopback10',\n  'ip address 10.255.10.1 255.255.255.255',\n  'description netforge-lab'\n]", explain: "List of config lines as you would type under conf t." },
+        { code: "result = conn.send_config_set(cmds)", explain: "Enters config mode, sends each line, exits. Returns combined output." },
+        { code: "save = conn.save_config()", explain: "Optional — writes startup. On Junos you’d commit instead (different device_type)." },
+        { code: "print(result)", explain: "Read the device response for errors (invalid input, etc.)." },
+      ],
+      quiz: { q: "send_config_set is closest to typing commands in:", opts: ["User EXEC only", "Global/config mode", "ROM monitor", "GuestShell bash only"], a: 1 }
+    },
+    {
+      id: "netmiko-inventory",
+      title: "Netmiko: loop an inventory",
+      blurb: "Operate on many devices — the daily driver pattern for backups and audits.",
+      lang: "python",
+      lines: [
+        { code: "inventory = [\n  {'device_type':'cisco_ios','host':'10.1.1.1','username':'admin','password':'x'},\n  {'device_type':'juniper_junos','host':'10.1.1.2','username':'admin','password':'x'},\n]", explain: "Mixed vendors work if device_type is correct." },
+        { code: "for dev in inventory:\n    c = ConnectHandler(**dev)\n    print(dev['host'], c.find_prompt())\n    c.disconnect()", explain: "Connect → work → disconnect inside the loop (or use context managers)." },
+      ],
+      quiz: { q: "Why set device_type correctly?", opts: ["It picks SSH prompt/enable quirks per OS", "It enables wireless", "It disables LLDP", "It compiles Rust"], a: 0 }
+    },
+    {
+      id: "guestshell",
+      title: "IOS-XE GuestShell Python",
+      blurb: "On-box Linux container on capable Catalyst/ISR IOS-XE platforms. Enable once, then run Python near the device.",
+      lang: "python",
+      lines: [
+        { code: "! IOS CLI:\nGuestshell enable\nGuestshell run bash", explain: "Enable GuestShell (needs resources/IOX). Drop into bash inside the container." },
+        { code: "guestshell run python", explain: "Launch Python interpreter inside GuestShell from IOS exec." },
+        { code: "# example on-box script idea\nimport cli\nprint(cli.execute('show ip interface brief'))", explain: "On some images, the cli module lets GuestShell Python call IOS commands locally." },
+        { code: "# Or use Netmiko from GuestShell toward VRF/mgmt targets", explain: "Treat GuestShell as a lab host co-located with the switch/router." },
+      ],
+      quiz: { q: "GuestShell runs:", opts: ["Only on Windows servers", "A Linux environment on IOS-XE", "Inside PAN-OS only", "As a replacement for STP"], a: 1 }
+    },
+    {
+      id: "lua-nmap",
+      title: "Lua mindset: Nmap NSE reading",
+      blurb: "NSE scripts use Lua. You won’t run Lua in-browser — learn to read script structure for authorized audits.",
+      lang: "lua",
+      lines: [
+        { code: "description = [[Recommend SSH host key algorithms]]", explain: "NSE scripts declare what they do." },
+        { code: "categories = {'safe','discovery'}", explain: "Category hints risk level — prefer safe in labs." },
+        { code: "portrule = shortport.port_or_service(22, 'ssh')", explain: "When the script fires (port/service match)." },
+        { code: "action = function(host, port)\n  -- probe and return a result table\nend", explain: "Main logic. Read before run; never scan without permission." },
+      ],
+      quiz: { q: "Before running Nmap/NSE against a network you must:", opts: ["Have authorization", "Disable logging", "Use production passwords in scripts", "Skip change windows"], a: 0 }
+    },
+    {
+      id: "under-the-hood",
+      title: "Under the hood: sockets (C / Rust / Java)",
+      blurb: "Annotated snippets — not compiled here — tying CLI ping/TCP tests to what hosts actually do.",
+      lang: "multi",
+      lines: [
+        { code: "// C: conceptual TCP connect\nint sock = socket(AF_INET, SOCK_STREAM, 0);\nconnect(sock, (struct sockaddr*)&addr, sizeof addr);", explain: "Test-NetConnection / curl ultimately ask the OS to create a socket and connect — same idea as a TCP probe." },
+        { code: "// Rust: TcpStream::connect(\"10.1.1.1:443\")?", explain: "Safe abstractions over the same syscalls; errors become Result." },
+        { code: "// Java: new Socket(\"10.1.1.1\", 443);", explain: "Enterprise agents often use Java sockets for health checks." },
+        { code: "// Checksums/endianness matter in custom packet tools — prefer tcpdump/Wireshark unless writing dissectors.", explain: "Network engineers rarely hand-roll packets; understanding why captures look big-endian on the wire helps decoding." },
+      ],
+      quiz: { q: "A TCP port test is closest to:", opts: ["Opening a socket and connecting", "Clearing STP", "Deleting VLANs", "Commit confirmed"], a: 0 }
+    },
+  ];
+
+  // COMMANDS injected later as window.NETFORGE_COMMANDS
+  let COMMANDS = [];
+  let state = {
+    view: "home",
+    vendorFilter: "all",
+    query: "",
+    selectedId: null,
+    bookmarks: [],
+    sandboxVendor: "cisco",
+    sandboxMode: "exec",
+    sandboxHist: [],
+    lastCmd: null,
+    flashIdx: 0,
+    flashSide: "front",
+    flashHard: {},
+    quizIdx: 0,
+    quizDone: {},
+    dailyDone: {},
+    streak: 0,
+    lastStudyDay: null,
+    journal: "",
+    compareTask: "show-int",
+  };
+
+  const storeKey = "netforge-v1";
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(storeKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      Object.assign(state, saved);
+    } catch (e) { /* ignore */ }
+  }
+  function saveState() {
+    const persist = {
+      bookmarks: state.bookmarks,
+      flashHard: state.flashHard,
+      quizDone: state.quizDone,
+      dailyDone: state.dailyDone,
+      streak: state.streak,
+      lastStudyDay: state.lastStudyDay,
+      journal: state.journal,
+      sandboxVendor: state.sandboxVendor,
+    };
+    localStorage.setItem(storeKey, JSON.stringify(persist));
+  }
+
+  function todayKey() {
+    const d = new Date();
+    return d.toISOString().slice(0, 10);
+  }
+  function bumpStreak() {
+    const t = todayKey();
+    if (state.lastStudyDay === t) return;
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    const yk = y.toISOString().slice(0, 10);
+    state.streak = state.lastStudyDay === yk ? (state.streak || 0) + 1 : 1;
+    state.lastStudyDay = t;
+    saveState();
+  }
+
+  function $(sel, el = document) { return el.querySelector(sel); }
+  function $all(sel, el = document) { return [...el.querySelectorAll(sel)]; }
+
+  function vendorBadge(v) {
+    return `<span class="badge ${v}">${v}</span>`;
+  }
+  function safetyBadge(s) {
+    return `<span class="badge ${s}">${s}</span>`;
+  }
+
+  function setView(name) {
+    state.view = name;
+    $all(".view").forEach(v => v.classList.toggle("active", v.dataset.view === name));
+    $all(".desktop-nav button, .bottom-nav button").forEach(b => {
+      b.classList.toggle("active", b.dataset.nav === name);
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    renderView();
+  }
+
+  function getFilteredCommands() {
+    const q = (state.query || "").trim().toLowerCase();
+    return COMMANDS.filter(c => {
+      if (state.vendorFilter !== "all" && c.vendor !== state.vendorFilter) return false;
+      if (!q) return true;
+      const hay = [c.cmd, c.purpose, ...(c.aliases || []), ...(c.tags || []), c.vendor, c.family, c.mode].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  function findCmd(id) { return COMMANDS.find(c => c.id === id); }
+
+  function normalizeSandboxInput(raw) {
+    return raw.trim().replace(/\s+/g, " ");
+  }
+
+  function matchCommand(vendor, input) {
+    const n = normalizeSandboxInput(input).toLowerCase();
+    if (!n) return null;
+    const pool = COMMANDS.filter(c => c.vendor === vendor);
+    // exact cmd or alias
+    for (const c of pool) {
+      if (c.cmd.toLowerCase() === n) return c;
+      if ((c.aliases || []).some(a => a.toLowerCase() === n)) return c;
+    }
+    // prefix / includes
+    let best = null;
+    for (const c of pool) {
+      const candidates = [c.cmd, ...(c.aliases || [])].map(x => x.toLowerCase());
+      for (const cand of candidates) {
+        if (n === cand || n.startsWith(cand + " ") || cand.startsWith(n)) {
+          if (!best || cand.length > best._score) best = Object.assign({}, c, { _score: cand.length });
+        }
+      }
+    }
+    return best;
+  }
+
+  function currentPrompt() {
+    const v = VENDORS.find(x => x.id === state.sandboxVendor);
+    const modes = v.prompt;
+    const keys = Object.keys(modes);
+    if (modes[state.sandboxMode]) return modes[state.sandboxMode];
+    return modes[keys[0]];
+  }
+
+  function renderHome() {
+    const el = $("#view-home");
+    const weekDay = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
+    const todayPlan = WEEKLY.find(w => w.day === weekDay) || WEEKLY[0];
+    const doneCount = DAILY.filter(d => state.dailyDone[todayKey() + ":" + d.id]).length;
+    el.innerHTML = `
+      <section class="hero">
+        <div class="brand-mark" style="width:48px;height:48px;border-radius:14px" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1a1008" stroke-width="2"><path d="M4 12h4l2-6 4 12 2-6h4"/></svg>
+        </div>
+        <h1>NetForge</h1>
+        <p>Offline multi-vendor command forge for network engineers — know what each command does, compare platforms, drill CLI, and practice Netmiko/GuestShell.</p>
+        <div class="vendor-strip">
+          ${VENDORS.map(v => `<button class="chip" data-jump-vendor="${v.id}">${v.label}</button>`).join("")}
+        </div>
+        <div class="toolbar">
+          <button class="btn primary" data-nav="encyclopedia">Open encyclopedia</button>
+          <button class="btn" data-nav="sandbox">CLI sandbox</button>
+          <button class="btn" data-nav="labs">Automation labs</button>
+        </div>
+      </section>
+      <div class="panel">
+        <div class="row" style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center">
+          <div>
+            <div class="k muted">Today · ${weekDay}</div>
+            <h3 style="margin:.2rem 0">${todayPlan.focus}</h3>
+            <p class="muted">Streak: <strong style="color:var(--copper2)">${state.streak || 0}</strong> day(s) · Daily ${doneCount}/${DAILY.length}</p>
+          </div>
+          <button class="btn primary" data-nav="${todayPlan.action}">Start today’s focus</button>
+        </div>
+        <div class="progress" style="margin-top:.8rem"><span style="width:${(doneCount/DAILY.length)*100}%"></span></div>
+      </div>
+      <div class="section-title"><h2>Jump in</h2></div>
+      <div class="grid cards">
+        <button class="card-btn" data-nav="encyclopedia"><h3>Command encyclopedia</h3><p>${COMMANDS.length} annotated commands across 5 platforms.</p></button>
+        <button class="card-btn" data-nav="compare"><h3>Vendor compare</h3><p>Same task, five CLIs — spot the mental model shifts.</p></button>
+        <button class="card-btn" data-nav="sandbox"><h3>CLI sandbox</h3><p>Fake terminals with canned realistic output + explain.</p></button>
+        <button class="card-btn" data-nav="labs"><h3>Automation lab</h3><p>Netmiko, GuestShell, Lua NSE mindset, socket notes.</p></button>
+        <button class="card-btn" data-nav="drills"><h3>Drills</h3><p>Flashcards, scenarios, quizzes with local progress.</p></button>
+        <button class="card-btn" data-nav="planner"><h3>Study planner</h3><p>Daily loop + weekly cadence for networkers.</p></button>
+        <button class="card-btn" data-nav="toolkit"><h3>Networker toolkit</h3><p>Wireshark, GNS3, iperf3, NAPALM, and more.</p></button>
+      </div>`;
+    bindNav(el);
+    $all("[data-jump-vendor]", el).forEach(b => b.addEventListener("click", () => {
+      state.vendorFilter = b.dataset.jumpVendor;
+      setView("encyclopedia");
+    }));
+  }
+
+  function renderEncyclopedia() {
+    const el = $("#view-encyclopedia");
+    if (state.selectedId) {
+      const c = findCmd(state.selectedId);
+      if (!c) { state.selectedId = null; }
+      else { renderCommandDetail(el, c); return; }
+    }
+    const list = getFilteredCommands();
+    el.innerHTML = `
+      <div class="section-title"><h2>Command encyclopedia</h2><span class="muted">${list.length} shown</span></div>
+      <div class="toolbar">
+        <button class="chip ${state.vendorFilter==='all'?'active':''}" data-vf="all">All</button>
+        ${VENDORS.map(v => `<button class="chip ${state.vendorFilter===v.id?'active':''}" data-vf="${v.id}">${v.label.split(' ')[0]}</button>`).join("")}
+        <button class="btn small ghost" id="btn-bookmarks">Bookmarks (${state.bookmarks.length})</button>
+      </div>
+      <div class="list" id="cmd-list">
+        ${list.length ? list.map(c => `
+          <button class="list-item" data-cmd="${c.id}">
+            <div class="row">${vendorBadge(c.vendor)} ${safetyBadge(c.safety)} <span class="badge">${c.mode}</span></div>
+            <div class="cmd-name">${escapeHtml(c.cmd)}</div>
+            <p class="muted">${escapeHtml(c.purpose.slice(0, 140))}${c.purpose.length>140?'…':''}</p>
+          </button>`).join("") : `<div class="empty">No commands match. Clear search or change vendor filter.</div>`}
+      </div>`;
+    $all("[data-vf]", el).forEach(b => b.addEventListener("click", () => { state.vendorFilter = b.dataset.vf; renderEncyclopedia(); }));
+    $all("[data-cmd]", el).forEach(b => b.addEventListener("click", () => { state.selectedId = b.dataset.cmd; bumpStreak(); renderEncyclopedia(); }));
+    $("#btn-bookmarks", el)?.addEventListener("click", () => {
+      state.vendorFilter = "all";
+      state.query = "";
+      $("#global-search").value = "";
+      const book = COMMANDS.filter(c => state.bookmarks.includes(c.id));
+      const listEl = $("#cmd-list", el);
+      if (!book.length) { listEl.innerHTML = `<div class="empty">No bookmarks yet — open a command and tap Bookmark.</div>`; return; }
+      listEl.innerHTML = book.map(c => `
+        <button class="list-item" data-cmd="${c.id}">
+          <div class="row">${vendorBadge(c.vendor)} ${safetyBadge(c.safety)}</div>
+          <div class="cmd-name">${escapeHtml(c.cmd)}</div>
+          <p class="muted">${escapeHtml(c.purpose.slice(0,140))}</p>
+        </button>`).join("");
+      $all("[data-cmd]", listEl).forEach(b => b.addEventListener("click", () => { state.selectedId = b.dataset.cmd; renderEncyclopedia(); }));
+    });
+  }
+
+  function renderCommandDetail(el, c) {
+    const bookmarked = state.bookmarks.includes(c.id);
+    const equiv = Object.entries(c.equivalents || {}).map(([k,v]) => {
+      const match = COMMANDS.find(x => x.vendor===k && (x.cmd===v || x.id===v));
+      const label = match ? match.cmd : v;
+      const id = match ? match.id : null;
+      return `<button class="btn small" ${id?`data-cmd="${id}"`:"disabled"}>${k}: <code>${escapeHtml(label)}</code></button>`;
+    }).join(" ");
+    el.innerHTML = `
+      <div class="toolbar">
+        <button class="btn" id="back-enc">← Back</button>
+        <button class="btn ${bookmarked?'primary':''}" id="toggle-book">${bookmarked?'Bookmarked':'Bookmark'}</button>
+        <button class="btn" data-nav="sandbox" id="try-sandbox">Try in sandbox</button>
+      </div>
+      <article class="detail panel">
+        <div class="row" style="display:flex;flex-wrap:wrap;gap:.4rem;align-items:center">
+          ${vendorBadge(c.vendor)} ${safetyBadge(c.safety)} <span class="badge">${escapeHtml(c.family)}</span> <span class="badge">${escapeHtml(c.mode)}</span>
+        </div>
+        <h2 class="cmd-name" style="font-size:1.35rem;margin:.4rem 0">${escapeHtml(c.cmd)}</h2>
+        <p>${escapeHtml(c.purpose)}</p>
+        <div class="kv"><div class="k">Syntax</div><div class="syntax">${escapeHtml(c.syntax)}</div></div>
+        ${c.tokens?.length ? `<div class="kv"><div class="k">Token breakdown</div><div class="token-list">${c.tokens.map(t=>`<div class="token"><code>${escapeHtml(t.t)}</code><span>${escapeHtml(t.d)}</span></div>`).join("")}</div></div>`:""}
+        ${c.flags?.length ? `<div class="kv"><div class="k">Flags / options</div><ul>${c.flags.map(f=>`<li><code>${escapeHtml(f.f)}</code> — ${escapeHtml(f.d)}</li>`).join("")}</ul></div>`:""}
+        <div class="kv"><div class="k">Sample output</div><pre>${escapeHtml(c.sample)}</pre></div>
+        ${c.annotations?.length ? `<div class="kv"><div class="k">Output anatomy</div><div class="token-list">${c.annotations.map(a=>`<div class="token"><code>${escapeHtml(a.field)}</code><span>${escapeHtml(a.note)}</span></div>`).join("")}</div></div>`:""}
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+          <div class="kv"><div class="k">When to use</div><p>${escapeHtml(c.when)}</p></div>
+          <div class="kv"><div class="k">When not to</div><p>${escapeHtml(c.whenNot)}</p></div>
+        </div>
+        <div class="kv"><div class="k">Vendor equivalents</div><div class="toolbar">${equiv || '<span class="muted">None mapped</span>'}</div></div>
+        ${c.related?.length ? `<div class="kv"><div class="k">Related</div><div class="toolbar">${c.related.map(rid=>{const r=findCmd(rid);return r?`<button class="btn small" data-cmd="${r.id}">${escapeHtml(r.cmd)}</button>`:''}).join("")}</div></div>`:""}
+      </article>`;
+    $("#back-enc", el).addEventListener("click", () => { state.selectedId = null; renderEncyclopedia(); });
+    $("#toggle-book", el).addEventListener("click", () => {
+      if (bookmarked) state.bookmarks = state.bookmarks.filter(id => id !== c.id);
+      else state.bookmarks.push(c.id);
+      saveState(); renderCommandDetail(el, c);
+    });
+    $("#try-sandbox", el).addEventListener("click", () => {
+      state.sandboxVendor = c.vendor;
+      const v = VENDORS.find(x => x.id === c.vendor);
+      state.sandboxMode = Object.keys(v.prompt)[0];
+      state.sandboxHist = [];
+      runSandboxCommand(c.cmd, true);
+      setView("sandbox");
+    });
+    $all("[data-cmd]", el).forEach(b => b.addEventListener("click", () => { state.selectedId = b.dataset.cmd; renderEncyclopedia(); }));
+    bindNav(el);
+  }
+
+  function renderCompare() {
+    const el = $("#view-compare");
+    const task = COMPARE_TASKS.find(t => t.id === state.compareTask) || COMPARE_TASKS[0];
+    el.innerHTML = `
+      <div class="section-title"><h2>Vendor compare</h2></div>
+      <div class="toolbar">
+        <label class="muted">Task</label>
+        <select id="compare-select" class="btn">${COMPARE_TASKS.map(t=>`<option value="${t.id}" ${t.id===task.id?'selected':''}>${escapeHtml(t.title)}</option>`).join("")}</select>
+      </div>
+      <p class="muted">${escapeHtml(task.note)}</p>
+      <div class="compare-grid" style="margin-top:.75rem">
+        ${VENDORS.map(v => {
+          const id = task.map[v.id];
+          const c = id ? findCmd(id) : null;
+          return `<div class="compare-card">
+            <h4>${v.label}</h4>
+            ${c ? `<code>${escapeHtml(c.cmd)}</code><p class="muted">${escapeHtml(c.purpose.slice(0,120))}…</p>
+              <button class="btn small" data-cmd="${c.id}">Open</button>` : `<p class="muted">See related set/syntax notes in encyclopedia.</p>`}
+          </div>`;
+        }).join("")}
+      </div>`;
+    $("#compare-select", el).addEventListener("change", e => { state.compareTask = e.target.value; renderCompare(); });
+    $all("[data-cmd]", el).forEach(b => b.addEventListener("click", () => { state.selectedId = b.dataset.cmd; setView("encyclopedia"); }));
+  }
+
+  function renderSandbox() {
+    const el = $("#view-sandbox");
+    const scenario = SCENARIOS.filter(s => s.vendor === state.sandboxVendor);
+    el.innerHTML = `
+      <div class="section-title"><h2>CLI sandbox</h2><span class="muted">Study simulator — not a real device</span></div>
+      <div class="toolbar">
+        ${VENDORS.map(v => `<button class="chip ${state.sandboxVendor===v.id?'active':''}" data-sv="${v.id}">${v.label.split(' ')[0]}</button>`).join("")}
+      </div>
+      <div class="terminal" id="term">
+        <div class="terminal-bar">
+          <span class="muted">${VENDORS.find(v=>v.id===state.sandboxVendor).label}</span>
+          <div>
+            <button class="btn small" id="explain-last">Explain last</button>
+            <button class="btn small" id="clear-term">Clear</button>
+          </div>
+        </div>
+        <div class="terminal-body" id="term-body"></div>
+        <div class="terminal-input-row">
+          <span class="prompt">${currentPrompt()}<span class="cursor-blink">▌</span></span>
+          <input id="term-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type a command…" />
+        </div>
+      </div>
+      <div id="explain-panel" class="panel hidden" style="margin-top:.75rem"></div>
+      <div class="section-title"><h2>Scenarios</h2></div>
+      <div class="grid cards">
+        ${SCENARIOS.map(s => `
+          <button class="card-btn" data-scen="${s.id}">
+            <h3>${escapeHtml(s.title)}</h3>
+            <p>${vendorBadge(s.vendor)} ${escapeHtml(s.explain)}</p>
+          </button>`).join("")}
+      </div>`;
+    const body = $("#term-body", el);
+    state.sandboxHist.forEach(h => {
+      body.innerHTML += `<div class="line-in">${escapeHtml(h.prompt + " " + h.input)}</div><div class="line-out ${h.err?'line-err':''}">${escapeHtml(h.output)}</div>`;
+    });
+    body.scrollTop = body.scrollHeight;
+    $all("[data-sv]", el).forEach(b => b.addEventListener("click", () => {
+      state.sandboxVendor = b.dataset.sv;
+      const v = VENDORS.find(x => x.id === state.sandboxVendor);
+      state.sandboxMode = Object.keys(v.prompt)[0];
+      state.sandboxHist = [];
+      saveState();
+      renderSandbox();
+    }));
+    const input = $("#term-input", el);
+    input.focus();
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        runSandboxCommand(input.value);
+        input.value = "";
+      }
+    });
+    $("#clear-term", el).addEventListener("click", () => { state.sandboxHist = []; renderSandbox(); });
+    $("#explain-last", el).addEventListener("click", explainLast);
+    $all("[data-scen]", el).forEach(b => b.addEventListener("click", () => {
+      const s = SCENARIOS.find(x => x.id === b.dataset.scen);
+      state.sandboxVendor = s.vendor;
+      const v = VENDORS.find(x => x.id === s.vendor);
+      state.sandboxMode = Object.keys(v.prompt)[0];
+      state.sandboxHist = [];
+      s.steps.forEach(cmd => runSandboxCommand(cmd, true));
+      bumpStreak();
+      renderSandbox();
+    }));
+  }
+
+  function runSandboxCommand(raw, silentRender) {
+    const input = normalizeSandboxInput(raw);
+    if (!input) return;
+    const prompt = currentPrompt();
+    // mode switches
+    const low = input.toLowerCase();
+    if (state.sandboxVendor === "cisco") {
+      if (low === "configure terminal" || low === "conf t" || low === "config t") state.sandboxMode = "config";
+      if (low === "end" || (low === "exit" && state.sandboxMode !== "exec")) state.sandboxMode = "exec";
+    }
+    if (state.sandboxVendor === "juniper" || state.sandboxVendor === "paloalto") {
+      if (low === "configure" || low === "edit") state.sandboxMode = "config";
+      if (low === "exit" || low === "quit") state.sandboxMode = state.sandboxVendor === "juniper" ? "operational" : "operational";
+    }
+    let output, err = false, matched = matchCommand(state.sandboxVendor, input);
+    if (matched) {
+      output = matched.sandboxOutput || matched.sample;
+      state.lastCmd = matched;
+    } else if (["exit","end","quit","top"].includes(low)) {
+      output = "";
+    } else if (low === "help" || low === "?") {
+      output = COMMANDS.filter(c => c.vendor === state.sandboxVendor).slice(0, 12).map(c => c.cmd).join("\n") + "\n… (search encyclopedia for more)";
+    } else {
+      err = true;
+      output = `% Unknown command in sandbox: ${input}\nHint: try 'help' or open Encyclopedia for ${state.sandboxVendor} commands.`;
+      state.lastCmd = null;
+    }
+    state.sandboxHist.push({ prompt, input, output, err, cmdId: matched?.id || null });
+    if (state.sandboxHist.length > 80) state.sandboxHist.shift();
+    if (!silentRender && state.view === "sandbox") {
+      const body = $("#term-body");
+      if (body) {
+        body.innerHTML += `<div class="line-in">${escapeHtml(prompt + " " + input)}</div><div class="line-out ${err?'line-err':''}">${escapeHtml(output)}</div>`;
+        body.scrollTop = body.scrollHeight;
+        // update prompt label
+        $(".prompt").innerHTML = `${currentPrompt()}<span class="cursor-blink">▌</span>`;
+      }
+    } else if (silentRender) {
+      // hist only; renderSandbox will paint
+    }
+  }
+
+  function explainLast() {
+    const panel = $("#explain-panel");
+    if (!panel) return;
+    const last = state.sandboxHist[state.sandboxHist.length - 1];
+    if (!last) { panel.classList.remove("hidden"); panel.innerHTML = `<p class="muted">No command yet.</p>`; return; }
+    const c = last.cmdId ? findCmd(last.cmdId) : state.lastCmd;
+    panel.classList.remove("hidden");
+    if (!c) {
+      panel.innerHTML = `<h3>Explain</h3><p>No encyclopedia match for <code>${escapeHtml(last.input)}</code>. Search the encyclopedia.</p>
+        <button class="btn" data-nav="encyclopedia">Encyclopedia</button>`;
+      bindNav(panel);
+      return;
+    }
+    panel.innerHTML = `
+      <h3>Explain: <span class="cmd-name">${escapeHtml(c.cmd)}</span></h3>
+      <p>${escapeHtml(c.purpose)}</p>
+      <div class="token-list">${(c.tokens||[]).map(t=>`<div class="token"><code>${escapeHtml(t.t)}</code><span>${escapeHtml(t.d)}</span></div>`).join("")}</div>
+      <button class="btn small" data-cmd="${c.id}" style="margin-top:.6rem">Open full card</button>`;
+    $("[data-cmd]", panel).addEventListener("click", () => { state.selectedId = c.id; setView("encyclopedia"); });
+  }
+  function renderLabs() {
+    const el = $("#view-labs");
+    el.innerHTML = `
+      <div class="section-title"><h2>Automation lab</h2><span class="muted">Copy scripts to your lab PC / GuestShell</span></div>
+      <div class="grid cards" id="lab-cards">
+        ${LABS.map(l => `<button class="card-btn" data-lab="${l.id}"><h3>${escapeHtml(l.title)}</h3><p>${escapeHtml(l.blurb)}</p></button>`).join("")}
+      </div>
+      <div id="lab-detail"></div>`;
+    $all("[data-lab]", el).forEach(b => b.addEventListener("click", () => showLab(b.dataset.lab)));
+  }
+
+  function showLab(id) {
+    const lab = LABS.find(l => l.id === id);
+    const box = $("#lab-detail");
+    const codeAll = lab.lines.map(l => l.code).join("\n\n");
+    box.innerHTML = `
+      <article class="panel lab-block" style="margin-top:1rem">
+        <div class="toolbar" style="justify-content:space-between">
+          <h3 style="margin:0">${escapeHtml(lab.title)}</h3>
+          <button class="btn small" id="copy-lab">Copy all</button>
+        </div>
+        <p class="muted">${escapeHtml(lab.blurb)}</p>
+        ${lab.lines.map((ln,i) => `
+          <details class="lab-line" ${i===0?'open':''}>
+            <summary><span>${escapeHtml(ln.code.split('\n')[0].slice(0,80))}${ln.code.length>80?'…':''}</span><span class="muted">explain</span></summary>
+            <pre style="margin:.25rem .85rem;background:#070b10;border-radius:8px;padding:.7rem;border:1px solid var(--line)">${escapeHtml(ln.code)}</pre>
+            <div class="explain">${escapeHtml(ln.explain)}</div>
+          </details>`).join("")}
+        <div class="kv" style="margin-top:.5rem">
+          <div class="k">Mini quiz</div>
+          <p>${escapeHtml(lab.quiz.q)}</p>
+          ${lab.quiz.opts.map((o,i)=>`<button class="quiz-opt" data-qi="${i}">${escapeHtml(o)}</button>`).join("")}
+          <div id="lab-quiz-msg" class="muted"></div>
+        </div>
+      </article>`;
+    $("#copy-lab", box).addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(codeAll); $("#copy-lab", box).textContent = "Copied"; }
+      catch { $("#copy-lab", box).textContent = "Select & copy manually"; }
+    });
+    $all(".quiz-opt", box).forEach(btn => btn.addEventListener("click", () => {
+      const i = +btn.dataset.qi;
+      $all(".quiz-opt", box).forEach(x => x.classList.remove("correct","wrong"));
+      if (i === lab.quiz.a) { btn.classList.add("correct"); $("#lab-quiz-msg").textContent = "Correct."; bumpStreak(); }
+      else { btn.classList.add("wrong"); $all(".quiz-opt", box)[lab.quiz.a].classList.add("correct"); $("#lab-quiz-msg").textContent = "Review the line explainers above."; }
+    }));
+  }
+
+  function flashDeck() {
+    // prefer hard cards
+    const base = COMMANDS.map(c => ({ id: c.id, front: c.cmd, back: `${c.vendor}: ${c.purpose}`, vendor: c.vendor }));
+    const hard = base.filter(c => state.flashHard[c.id]);
+    const deck = hard.length ? hard.concat(base.filter(c => !state.flashHard[c.id])) : base;
+    return deck;
+  }
+
+  function renderDrills() {
+    const el = $("#view-drills");
+    const deck = flashDeck();
+    if (state.flashIdx >= deck.length) state.flashIdx = 0;
+    const card = deck[state.flashIdx];
+    const quiz = QUIZZES[state.quizIdx % QUIZZES.length];
+    el.innerHTML = `
+      <div class="section-title"><h2>Flashcards</h2><span class="muted">${state.flashIdx+1}/${deck.length}</span></div>
+      <div class="flash-card" id="flash">
+        ${state.flashSide==='front'
+          ? `<div><div class="muted" style="margin-bottom:.5rem">${vendorBadge(card.vendor)}</div><div class="front">${escapeHtml(card.front)}</div><p class="muted" style="margin-top:1rem">Tap to reveal</p></div>`
+          : `<div class="back">${escapeHtml(card.back)}</div>`}
+      </div>
+      <div class="toolbar" style="margin-top:.75rem">
+        <button class="btn" id="flash-prev">Prev</button>
+        <button class="btn" id="flash-hard">Mark hard</button>
+        <button class="btn primary" id="flash-next">Next</button>
+      </div>
+      <div class="section-title"><h2>Scenario quiz</h2></div>
+      <div class="panel">
+        <p>${escapeHtml(quiz.q)}</p>
+        ${quiz.opts.map((o,i)=>`<button class="quiz-opt" data-ans="${i}">${escapeHtml(o)}</button>`).join("")}
+        <div id="quiz-msg" class="muted" style="margin-top:.5rem"></div>
+        <button class="btn small" id="quiz-next" style="margin-top:.5rem">Next question</button>
+      </div>
+      <div class="section-title"><h2>Incident scenarios</h2></div>
+      <div class="list">
+        ${SCENARIOS.map(s => `
+          <button class="list-item" data-go-scen="${s.id}">
+            <div class="row">${vendorBadge(s.vendor)}</div>
+            <strong>${escapeHtml(s.title)}</strong>
+            <p class="muted">${escapeHtml(s.explain)}</p>
+          </button>`).join("")}
+      </div>`;
+    $("#flash", el).addEventListener("click", () => { state.flashSide = state.flashSide === "front" ? "back" : "front"; renderDrills(); });
+    $("#flash-next", el).addEventListener("click", () => { state.flashIdx++; state.flashSide = "front"; bumpStreak(); renderDrills(); });
+    $("#flash-prev", el).addEventListener("click", () => { state.flashIdx = Math.max(0, state.flashIdx-1); state.flashSide = "front"; renderDrills(); });
+    $("#flash-hard", el).addEventListener("click", () => { state.flashHard[card.id] = Date.now(); saveState(); $("#flash-hard", el).textContent = "Marked"; });
+    $all("[data-ans]", el).forEach(b => b.addEventListener("click", () => {
+      const i = +b.dataset.ans;
+      $all("[data-ans]", el).forEach(x => x.classList.remove("correct","wrong"));
+      if (i === quiz.a) { b.classList.add("correct"); $("#quiz-msg").textContent = "Nice."; bumpStreak(); state.quizDone[state.quizIdx] = true; saveState(); }
+      else { b.classList.add("wrong"); $all("[data-ans]", el)[quiz.a].classList.add("correct"); $("#quiz-msg").textContent = "Check encyclopedia equivalents."; }
+    }));
+    $("#quiz-next", el).addEventListener("click", () => { state.quizIdx++; renderDrills(); });
+    $all("[data-go-scen]", el).forEach(b => b.addEventListener("click", () => {
+      const s = SCENARIOS.find(x => x.id === b.dataset.goScen);
+      state.sandboxVendor = s.vendor;
+      state.sandboxHist = [];
+      setView("sandbox");
+      setTimeout(() => { s.steps.forEach(cmd => runSandboxCommand(cmd, true)); renderSandbox(); }, 0);
+    }));
+  }
+
+  function renderPlanner() {
+    const el = $("#view-planner");
+    const tk = todayKey();
+    const doneCount = DAILY.filter(d => state.dailyDone[tk + ":" + d.id]).length;
+    el.innerHTML = `
+      <div class="section-title"><h2>Study planner</h2><span class="muted">Streak ${state.streak||0}</span></div>
+      <div class="panel">
+        <h3>Daily loop (20–40 min)</h3>
+        <div class="progress" style="margin:.6rem 0 1rem"><span style="width:${(doneCount/DAILY.length)*100}%"></span></div>
+        <div class="list">
+          ${DAILY.map(d => {
+            const key = tk + ":" + d.id;
+            const done = !!state.dailyDone[key];
+            return `<div class="list-item" style="display:flex;justify-content:space-between;gap:.75rem;align-items:center">
+              <div>
+                <strong>${escapeHtml(d.title)}</strong>
+                <p class="muted">${d.mins} min · ${escapeHtml(d.detail)}</p>
+              </div>
+              <div class="toolbar">
+                <button class="btn small" data-nav="${d.action}">Go</button>
+                <button class="btn small ${done?'primary':''}" data-daily="${d.id}">${done?'Done':'Check'}</button>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+      </div>
+      <div class="section-title"><h2>Weekly focus</h2></div>
+      <div class="list">
+        ${WEEKLY.map(w => `
+          <button class="list-item" data-nav="${w.action}" ${w.vendor?`data-set-vendor="${w.vendor}"`:''}>
+            <div class="row"><span class="badge">${w.day}</span></div>
+            <strong>${escapeHtml(w.focus)}</strong>
+          </button>`).join("")}
+      </div>
+      <div class="section-title"><h2>Troubleshooting journal</h2></div>
+      <div class="panel">
+        <textarea class="journal" id="journal" placeholder="What would you check first if users in VLAN 10 suddenly lost the gateway?">${escapeHtml(state.journal||"")}</textarea>
+        <button class="btn primary" id="save-journal" style="margin-top:.6rem">Save journal</button>
+      </div>`;
+    bindNav(el);
+    $all("[data-daily]", el).forEach(b => b.addEventListener("click", () => {
+      const key = tk + ":" + b.dataset.daily;
+      state.dailyDone[key] = !state.dailyDone[key];
+      if (state.dailyDone[key]) bumpStreak();
+      saveState(); renderPlanner();
+    }));
+    $all("[data-set-vendor]", el).forEach(b => b.addEventListener("click", () => { state.vendorFilter = b.dataset.setVendor; }));
+    $("#save-journal", el).addEventListener("click", () => {
+      state.journal = $("#journal", el).value;
+      saveState(); bumpStreak();
+      $("#save-journal", el).textContent = "Saved";
+    });
+  }
+
+  function renderToolkit() {
+    const el = $("#view-toolkit");
+    el.innerHTML = `
+      <div class="section-title"><h2>Networker toolkit</h2><span class="muted">What to learn alongside NetForge</span></div>
+      ${TOOLKIT.map(cat => `
+        <div class="section-title"><h2>${escapeHtml(cat.cat)}</h2></div>
+        <div class="grid cards">
+          ${cat.items.map(it => `
+            <div class="panel">
+              <h3>${escapeHtml(it.name)}</h3>
+              <p><span class="k muted">Why</span><br>${escapeHtml(it.why)}</p>
+              <p style="margin-top:.5rem"><span class="k muted">When</span><br>${escapeHtml(it.when)}</p>
+              <p style="margin-top:.5rem"><span class="k muted">Offline tip</span><br>${escapeHtml(it.tip)}</p>
+            </div>`).join("")}
+        </div>`).join("")}
+      <div class="panel" style="margin-top:1rem">
+        <h3>Suggested weekly mix</h3>
+        <p class="muted">2 days Packet Tracer/GNS3 · 1 day Wireshark pcaps · 1 day Netmiko scripts · 1 day host Linux/PowerShell · weekend scenario review in NetForge drills.</p>
+      </div>`;
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[ch]));
+  }
+
+  function bindNav(root) {
+    $all("[data-nav]", root).forEach(b => b.addEventListener("click", () => setView(b.dataset.nav)));
+  }
+
+  function renderView() {
+    switch (state.view) {
+      case "home": renderHome(); break;
+      case "encyclopedia": renderEncyclopedia(); break;
+      case "compare": renderCompare(); break;
+      case "sandbox": renderSandbox(); break;
+      case "labs": renderLabs(); break;
+      case "drills": renderDrills(); break;
+      case "planner": renderPlanner(); break;
+      case "toolkit": renderToolkit(); break;
+      default: renderHome();
+    }
+  }
+
+  function init() {
+    COMMANDS = window.NETFORGE_COMMANDS || [];
+    loadState();
+    // nav
+    $all(".desktop-nav button, .bottom-nav button, .brand").forEach(b => {
+      b.addEventListener("click", () => setView(b.dataset.nav || "home"));
+    });
+    const search = $("#global-search");
+    let t = null;
+    search.addEventListener("input", () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        state.query = search.value;
+        state.selectedId = null;
+        if (state.view !== "encyclopedia") setView("encyclopedia");
+        else renderEncyclopedia();
+      }, 120);
+    });
+    search.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        state.query = search.value;
+        state.selectedId = null;
+        setView("encyclopedia");
+      }
+    });
+    setView("home");
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+
+</script>
+</body>
+</html>
